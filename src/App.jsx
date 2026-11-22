@@ -1,15 +1,17 @@
 import { useCallback, useEffect, useState } from "react"
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
-import { doc, getDoc } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from "firebase/firestore"
 import BootScreen from "./components/BootScreen"
 import Footer from "./components/Footer"
 import Guidelines from "./components/Guidelines"
 import Hero from "./components/Hero"
+import IdentityCard from "./components/IdentityCard"
 import NoticeStack from "./components/NoticeStack"
 import ProfileModal from "./components/ProfileModal"
 import SiteSections from "./components/SiteSections"
 import TopBar from "./components/TopBar"
 import { auth, db, googleProvider } from "./firebase"
+import { issuePublicUid } from "./publicUid"
 import { useScrollReveal } from "./scrollReveal"
 
 export default function App() {
@@ -19,6 +21,7 @@ export default function App() {
   const [authReady, setAuthReady] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [notices, setNotices] = useState([])
+  const [viewedProfile, setViewedProfile] = useState(null)
 
   const finishBoot = useCallback(() => setBooted(true), [])
   useScrollReveal(booted)
@@ -66,7 +69,17 @@ export default function App() {
       try {
         const snap = await getDoc(doc(db, "users", next.uid))
         if (snap.exists()) {
-          setProfile(snap.data())
+          const data = snap.data()
+          if (!data.publicUid) {
+            try {
+              const publicUid = await issuePublicUid()
+              await setDoc(doc(db, "users", next.uid), { publicUid }, { merge: true })
+              data.publicUid = publicUid
+            } catch {
+              data.publicUid = ""
+            }
+          }
+          setProfile(data)
         } else {
           setProfile(null)
           setProfileOpen(true)
@@ -98,6 +111,35 @@ export default function App() {
     }
   }
 
+  async function searchProfiles(term) {
+    const value = term.trim()
+    if (!value) return []
+    const found = new Map()
+    try {
+      const direct = await getDoc(doc(db, "users", value))
+      if (direct.exists()) found.set(direct.id, { id: direct.id, ...direct.data() })
+      const byCode = await getDocs(
+        query(collection(db, "users"), where("publicUid", "==", value.toUpperCase()), limit(5)),
+      )
+      byCode.forEach((entry) => found.set(entry.id, { id: entry.id, ...entry.data() }))
+      const byName = await getDocs(
+        query(
+          collection(db, "users"),
+          where("displayName", ">=", value),
+          where("displayName", "<=", `${value}\uf8ff`),
+          limit(8),
+        ),
+      )
+      byName.forEach((entry) => found.set(entry.id, { id: entry.id, ...entry.data() }))
+    } catch {
+      pushNotice({ code: "ARCHIVE // DENIED", message: "檔案索引未開放" })
+      return []
+    }
+    const records = [...found.values()]
+    if (!records.length) pushNotice({ code: "ARCHIVE // EMPTY", message: "查無相符檔案" })
+    return records
+  }
+
   return (
     <div className="relative min-h-screen">
       <div className="scanlines" />
@@ -112,6 +154,8 @@ export default function App() {
         onLogin={login}
         onLogout={logout}
         onEditProfile={() => setProfileOpen(true)}
+        onSearch={searchProfiles}
+        onViewProfile={setViewedProfile}
       />
       <div className="relative z-10" data-reveal-root="">
         <main>
@@ -133,6 +177,8 @@ export default function App() {
           }}
         />
       )}
+
+      {viewedProfile && <IdentityCard profile={viewedProfile} onClose={() => setViewedProfile(null)} />}
 
       <NoticeStack notices={notices} onDismiss={dismissNotice} onRemove={removeNotice} />
     </div>

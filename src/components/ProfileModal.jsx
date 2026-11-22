@@ -3,6 +3,7 @@ import imageCompression from "browser-image-compression"
 import { updateProfile } from "firebase/auth"
 import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import { db } from "../firebase"
+import { issuePublicUid } from "../publicUid"
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/afxj9khk/image/upload"
 const MAX_BYTES = 5 * 1024 * 1024
@@ -234,8 +235,10 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
         avatarPublicId = uploaded.public_id
       }
 
+      const publicUid = profile?.publicUid || (await issuePublicUid())
       const record = {
         uid: user.uid,
+        publicUid,
         email: user.email || "",
         displayName: name,
         avatarUrl,
@@ -278,6 +281,9 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
           人員識別檔案綁定終端
         </h2>
         <p className="mt-2 font-mono text-[11px] text-ash">{user.email}</p>
+        <p className="mt-1 font-mono text-[11px] tracking-[0.16em] text-ash">
+          UID // {profile?.publicUid || "儲存後核發"}
+        </p>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
           <div

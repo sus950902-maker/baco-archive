@@ -10,7 +10,7 @@ const FILES = [
 
 const BRIEFING = [
   "我們的世界，遠比所見的更加脆弱。",
-  "「常理之外，我們將築起高牆；基準之中，唯有秩序永恆。」",
+  "「常理之外，我們將築高牆；基準之中，唯有秩序永恆。」",
 ]
 
 export default function Hero({ user, onNotice }) {

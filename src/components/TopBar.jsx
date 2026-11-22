@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import { Search } from "lucide-react"
 
 function formatStamp(date) {
   const pad = (value) => String(value).padStart(2, "0")
@@ -34,11 +35,15 @@ function IdentityMark({ src, name }) {
 const actionClass =
   "shrink-0 border border-line bg-panel px-3 py-2 font-mono text-xs tracking-wide whitespace-nowrap text-ink transition-colors hover:border-alert hover:text-alert focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert disabled:opacity-40"
 
-export default function TopBar({ user, profile, authReady, onLogin, onLogout, onEditProfile }) {
+export default function TopBar({ user, profile, authReady, onLogin, onLogout, onEditProfile, onSearch, onViewProfile }) {
   const headerRef = useRef(null)
   const [stamp, setStamp] = useState(() => formatStamp(new Date()))
   const [open, setOpen] = useState(false)
   const [headerHeight, setHeaderHeight] = useState(0)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState("")
+  const [results, setResults] = useState([])
+  const [searching, setSearching] = useState(false)
 
   useEffect(() => {
     const timer = setInterval(() => setStamp(formatStamp(new Date())), 1000)
@@ -56,13 +61,34 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
   }, [])
 
   useEffect(() => {
-    if (!open) return undefined
+    if (!open && !searchOpen) return undefined
     const onKey = (event) => {
-      if (event.key === "Escape") setOpen(false)
+      if (event.key !== "Escape") return
+      if (searchOpen) {
+        setSearchOpen(false)
+        setResults([])
+        return
+      }
+      setOpen(false)
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [open])
+  }, [open, searchOpen])
+
+  async function submitSearch(event) {
+    event.preventDefault()
+    if (!searchValue.trim() || searching) return
+    setSearching(true)
+    const records = await onSearch(searchValue)
+    setSearching(false)
+    if (records.length === 1) {
+      setResults([])
+      setSearchOpen(false)
+      onViewProfile(records[0])
+      return
+    }
+    setResults(records)
+  }
 
   return (
     <>
@@ -130,6 +156,53 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
             <button type="button" onClick={onEditProfile} className={actionClass}>
               [ 檔案設定 ]
             </button>
+            <div className="relative flex items-center gap-2">
+              {searchOpen && (
+                <form onSubmit={submitSearch}>
+                  <input
+                    autoFocus
+                    value={searchValue}
+                    disabled={searching}
+                    onChange={(event) => setSearchValue(event.target.value)}
+                    placeholder="名稱或 UID"
+                    aria-label="搜尋名稱或 UID"
+                    className="w-32 border border-line bg-black px-2 py-2 font-mono text-xs text-ink outline-none focus:border-alert sm:w-44"
+                  />
+                </form>
+              )}
+              <button
+                type="button"
+                aria-label="搜尋人員檔案"
+                aria-expanded={searchOpen}
+                onClick={() => {
+                  setSearchOpen((value) => !value)
+                  setResults([])
+                }}
+                className={`${actionClass} px-2`}
+              >
+                <Search className="h-4 w-4" aria-hidden="true" />
+              </button>
+              {results.length > 1 && (
+                <ul className="absolute top-full right-0 z-50 mt-2 max-h-64 w-60 overflow-y-auto border border-white/15 bg-black">
+                  {results.map((record) => (
+                    <li key={record.id}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResults([])
+                          setSearchOpen(false)
+                          onViewProfile(record)
+                        }}
+                        className="block w-full border-b border-white/10 px-3 py-2 text-left hover:bg-white/5"
+                      >
+                        <span className="block truncate text-sm text-ink">{record.displayName || "未命名"}</span>
+                        <span className="font-mono text-[10px] tracking-[0.14em] text-ash">{record.publicUid || record.uid}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <button type="button" onClick={onLogout} className={actionClass}>
               [ 登出 ]
             </button>
