@@ -30,7 +30,7 @@ export default function Hero({ user, onNotice }) {
 
   return (
     <section id="overview" className="mx-auto max-w-6xl scroll-mt-36 px-4 pt-10 pb-40 sm:px-6 sm:pt-14 sm:pb-56">
-      <div className="relative mx-auto mb-6 h-[26rem] w-[26rem] max-w-full sm:h-[34rem] sm:w-[34rem]">
+      <div className="relative mx-auto mb-6 h-[26rem] w-full max-w-[26rem] sm:h-[34rem] sm:max-w-[34rem]">
         <div className="pointer-events-none absolute inset-0">
           <GlobeBackdrop />
         </div>
@@ -84,24 +84,24 @@ export default function Hero({ user, onNotice }) {
                 </button>
                 <div className={`faction-expand ${open ? "is-open" : ""}`} aria-hidden={!open}>
                   <div>
-                    {open && (
-                    <div className="border-t border-[#d6d1c7] px-5 py-5 sm:px-8 sm:py-7">
-                      {file.id === "brief" ? (
-                        <div className="space-y-4">
-                          <p className="text-base font-bold leading-8 text-alert sm:text-[17px]">{BRIEFING[0]}</p>
-                          <p className="text-base font-[450] leading-8 text-ink sm:text-[17px]">
-                            異常收容與觀測調查局
-                            <span className="text-ash">
-                              （Bureau of Anomalous Containment, Observation and Investigation，簡稱：異常管理局｜B.A.C.O.）
-                            </span>
-                            為專責維護人類現實防線之最高機密機構。本機構之核心設立目標，在於常理之外建立絕對秩序：針對一切試圖破壞現實法則、引發大規模混亂的未明異常現象與實體，執行全天候觀測、即時阻斷與最高規格收容，確保所有失控變數被重新鎖閉於防護網之內。
-                          </p>
-                          <p className="text-base font-[450] leading-8 text-ink sm:text-[17px]">{BRIEFING[1]}</p>
-                        </div>
-                      ) : (
-                        <p className="font-mono text-[11px] tracking-[0.22em] text-ash">FILE STATUS // COMPILING</p>
-                      )}
-                    </div>
+                    {!locked && (
+                      <div className="border-t border-[#d6d1c7] px-5 py-5 sm:px-8 sm:py-7">
+                        {file.id === "brief" ? (
+                          <div className="space-y-4">
+                            <p className="text-base font-bold leading-8 text-alert sm:text-[17px]">{BRIEFING[0]}</p>
+                            <p className="text-base font-[450] leading-8 text-ink sm:text-[17px]">
+                              異常收容與觀測調查局
+                              <span className="text-ash">
+                                （Bureau of Anomalous Containment, Observation and Investigation，簡稱：異常管理局｜B.A.C.O.）
+                              </span>
+                              為專責維護人類現實防線之最高機密機構。本機構之核心設立目標，在於常理之外建立絕對秩序：針對一切試圖破壞現實法則、引發大規模混亂的未明異常現象與實體，執行全天候觀測、即時阻斷與最高規格收容，確保所有失控變數被重新鎖閉於防護網之內。
+                            </p>
+                            <p className="text-base font-[450] leading-8 text-ink sm:text-[17px]">{BRIEFING[1]}</p>
+                          </div>
+                        ) : (
+                          <p className="font-mono text-[11px] tracking-[0.22em] text-ash">FILE STATUS // COMPILING</p>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>

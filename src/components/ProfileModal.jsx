@@ -268,7 +268,7 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-3 py-4 sm:px-4 sm:py-8">
       <button
         type="button"
         aria-label="關閉檔案設定"
@@ -281,20 +281,20 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
         aria-modal="true"
         aria-labelledby="identity-title"
         onSubmit={save}
-        className="hud-corner relative z-10 max-h-[calc(100vh-4rem)] w-full max-w-lg overflow-y-auto border border-white/15 bg-black p-5 text-ink shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-7"
+        className="dossier-scroll hud-corner relative z-10 my-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100dvw-1.5rem))] min-w-0 border border-white/15 bg-black p-4 text-ink shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-7"
       >
         <p className="font-mono text-[11px] tracking-[0.22em] text-signal">IDENTITY BINDING // 人員識別檔案</p>
         <h2 id="identity-title" className="mt-2 text-xl font-medium text-ink">
           人員識別檔案綁定終端
         </h2>
-        <p className="mt-2 font-mono text-[11px] text-ash">{user.email}</p>
+        <p className="mt-2 font-mono text-[11px] break-all text-ash">{user.email}</p>
         <p className="mt-1 font-mono text-[11px] tracking-[0.16em] text-ash">
           UID // {profile?.publicUid || "儲存後核發"}
         </p>
 
         <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-end">
           <div
-            className={`relative h-60 w-60 shrink-0 overflow-hidden border border-white/15 bg-panel ${editable ? "cursor-grab touch-none" : ""}`}
+            className={`relative h-60 w-60 max-w-full shrink-0 overflow-hidden border border-white/15 bg-panel ${editable ? "cursor-grab touch-none" : ""}`}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
             onPointerUp={onPointerUp}

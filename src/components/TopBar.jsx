@@ -96,13 +96,13 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
       ref={headerRef}
       className="sticky top-0 z-40 border-b border-white/10 bg-black"
     >
-      <div className="flex items-center justify-between gap-4 border-b border-line px-4 py-2 whitespace-nowrap sm:px-6">
-        <p className="flex shrink-0 items-center gap-2 font-mono text-[11px] tracking-wide text-signal">
-          <span className="inline-block h-2 w-2 rounded-full bg-signal text-signal animate-led" />
-          連線狀態：SECURE // CHANNEL-04
+      <div className="flex items-center justify-between gap-3 overflow-hidden border-b border-line px-4 py-2 sm:px-6">
+        <p className="flex min-w-0 items-center gap-2 font-mono text-[11px] tracking-wide text-signal">
+          <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-signal text-signal animate-led" />
+          <span className="truncate">連線狀態：SECURE // CHANNEL-04</span>
         </p>
-        <div className="flex min-w-0 items-center gap-3 font-mono text-[11px] text-ash">
-          <span className="truncate">
+        <div className="flex shrink-0 items-center gap-3 font-mono text-[11px] text-ash">
+          <span className="hidden truncate sm:inline">
             <span className="hidden lg:inline">SYSTEM: INTERNAL ARCHIVE // </span>
             {user ? "CLEARANCE: AUTHORIZED // 已綁定" : "CLEARANCE: GUEST"}
           </span>
@@ -112,7 +112,7 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 px-4 py-3 sm:px-6">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <button
             type="button"
@@ -144,7 +144,7 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
         </div>
 
         {user ? (
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
             <IdentityMark
               key={profile?.avatarUrl || user.photoURL || "mark"}
               src={profile?.avatarUrl || user.photoURL || ""}
