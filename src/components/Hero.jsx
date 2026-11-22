@@ -22,32 +22,11 @@ const WORLD = [
 ]
 
 const PROTOCOL = [
-  "異常管理局B.A.C.O.對一切超常現象實施最高等級的資訊封鎖政策。此項保密協議並非單純基於社會學層面上的「避免群體恐慌」，而是建立在對認知危害型異常（Cognitohazardous Anomalies）與模因級概念體（Memetic Entities）的預防措施。",
   "根據本局過往紀錄，某些高危異常具備「觀測者依賴性」與「概念增殖特性」——意即其現實干涉強度與知曉該概念之智慧個體數量呈正相關。一旦特定模因異常突破資訊防火牆並進入現代高密度互聯網中，恐懼情緒與資訊傳播將引發指數級連鎖反應，進而導致大規模認知污染及不可逆的現實結構崩潰。",
   "因此，維持公眾對異常現象的「零認知」，為確保文明存續之首要前提。",
 ]
 
 const bodyClass = "text-base font-[450] leading-8 text-ink sm:text-[17px]"
-
-function markProtocol(text) {
-  return text.split(/(「[^」]*」|（[^）]*）)/).map((piece, index) => {
-    if (piece.startsWith("「") && piece.endsWith("」")) {
-      return (
-        <span key={index}>
-          「<span className="font-bold">{piece.slice(1, -1)}</span>」
-        </span>
-      )
-    }
-    if (piece.startsWith("（") && piece.endsWith("）")) {
-      return (
-        <span key={index} className="text-ash">
-          {piece}
-        </span>
-      )
-    }
-    return piece
-  })
-}
 
 export default function Hero({ user, onNotice }) {
   const [openId, setOpenId] = useState(null)
@@ -156,9 +135,16 @@ export default function Hero({ user, onNotice }) {
                           </div>
                         ) : file.id === "secret" ? (
                           <div className="space-y-4">
+                            <p className={bodyClass}>
+                              異常管理局B.A.C.O.對一切超常現象實施最高等級的資訊封鎖政策。此項保密協議並非單純基於社會學層面上的「避免群體恐慌」，而是建立在對認知危害型異常
+                              <span className="text-ash">（Cognitohazardous Anomalies）</span>
+                              與模因級概念體
+                              <span className="text-ash">（Memetic Entities）</span>
+                              的預防措施。
+                            </p>
                             {PROTOCOL.map((paragraph) => (
                               <p key={paragraph} className={bodyClass}>
-                                {markProtocol(paragraph)}
+                                {paragraph}
                               </p>
                             ))}
                           </div>
@@ -172,6 +158,24 @@ export default function Hero({ user, onNotice }) {
                                 {paragraph}
                               </p>
                             ))}
+                          </div>
+                        ) : file.id === "secret-1" ? (
+                          <div className="space-y-4">
+                            <p className={bodyClass}>
+                              為確保一般民眾得以在異常威脅下正常生活並維持社會穩定，異常收容與觀測調查局
+                              <span className="text-ash">（B.A.C.O.）</span>
+                              於全球資訊基建與醫療體系底層，建立了一套最高機密的多層次「現實掩護網」——內部代號：「方舟計畫」。
+                            </p>
+                            <p className={bodyClass}>
+                              在認知與資訊管制層面，針對意外目擊異常之平民倖存者，以及在第一線遭遇精神污染之調查人員，本局將強制執行局部記憶清洗與認知覆寫程序
+                              <span className="text-ash">（Mnemonic Erasure Protocol）</span>
+                              。同時，情報管制部門會透過演算法與主流媒體管道，將所有異常災害的物理痕跡統一擬態為「高壓管線氣爆」、「極端氣象異常」、「集體心因性幻覺」或「地方傳染病」等常規世俗事件，徹底切斷公眾與異常之間的認知連結。
+                            </p>
+                            <p className={bodyClass}>
+                              在生命維持與人口統計層面，「方舟計畫」亦包含與全球公衛機構簽訂的秘密協定，於全體市民的定期健康檢查中植入「神經突觸與基因序列即時備份模組」。一旦民眾不幸於異常災害中發生生物性死亡，後勤部門將秘密啟動「重構列印終端
+                              <span className="text-ash">（Reconstruction Terminal）</span>
+                              」，依據最新備份數據重新打印生物軀殼，並精準切除死亡前後之異常接觸記憶後送返原社會軌跡，藉此從統計學層面徹底抹除「非自然失蹤率」，維持表層世界之絕對穩定。
+                            </p>
                           </div>
                         ) : (
                           <p className="font-mono text-[11px] tracking-[0.22em] text-ash">FILE STATUS // COMPILING</p>
