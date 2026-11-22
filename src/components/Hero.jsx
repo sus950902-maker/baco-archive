@@ -7,7 +7,7 @@ const FILES = [
   { id: "brief", index: "01", code: "DOSSIER BODY", title: "機構簡介" },
   { id: "world", index: "02", code: "WORLD RECORD", title: "世界觀" },
   { id: "anomaly", index: "03", code: "ABOUT ANOMALY", title: "關於異常" },
-  { id: "secret", index: "04", code: "OMEGA LOCK", title: "認知危害與模因擴散效應", restricted: true },
+  { id: "secret", index: "04", code: "OMEGA LOCK", title: "認知封鎖協議", restricted: true },
   { id: "secret-1", index: "05", code: "OMEGA LOCK-1", title: "方舟計畫", restricted: true },
 ]
 
@@ -19,6 +19,12 @@ const BRIEFING = [
 const WORLD = [
   "這裡是 21 世紀末，一個科技高度繁榮、超凡潛力並存，卻又無比脆弱的類地球文明。",
   "受歷史異常輻射影響，星球上棲息著人類、改造人、亞人種，甚至是擁有自我意識並以人形融入社會的受控異常個體；但社會的絕大多數民眾依然是毫無防備、沒有特殊能力的普通市民。",
+]
+
+const PROTOCOL = [
+  "異常管理局B.A.C.O.對一切超常現象實施最高等級的資訊封鎖政策。此項保密協議並非單純基於社會學層面上的「避免群體恐慌」，而是建立在對認知危害型異常（Cognitohazardous Anomalies）與模因級概念體（Memetic Entities）的預防措施。",
+  "根據本局過往紀錄，某些高危異常具備「觀測者依賴性」與「概念增殖特性」——意即其現實干涉強度與知曉該概念之智慧個體數量呈正相關。一旦特定模因異常突破資訊防火牆並進入現代高密度互聯網中，恐懼情緒與資訊傳播將引發指數級連鎖反應，進而導致大規模認知污染及不可逆的現實結構崩潰。",
+  "因此，維持公眾對異常現象的「零認知」，為確保文明存續之首要前提。",
 ]
 
 const bodyClass = "text-base font-[450] leading-8 text-ink sm:text-[17px]"
@@ -113,18 +119,28 @@ export default function Hero({ user, onNotice }) {
                         ) : file.id === "anomaly" ? (
                           <div className="space-y-4">
                             <p className={bodyClass}>
-                              自古以來，人類一直在暗中與「<span className="font-bold">異常</span>」抗衡。
+                              自古以來，人類一直在與「<span className="font-bold">異常</span>」抗衡。
                             </p>
                             <p className={bodyClass}>
-                              無人知曉它們的真正源頭，有人稱其為世界規則的致命漏洞，也有人認為是高維混沌滲入現實的裂痕。如今大眾口耳相傳的神話禁忌、民間鬼怪與網路怪談，全都是過去異常事件外洩後留下的歷史殘影。
+                              無人知曉它們的真正源頭，有人稱其為世界規則的致命漏洞，也有人認為是高維混沌滲入現實的裂痕。如今大眾口耳相傳的神話禁忌、民間鬼怪與網路怪談，大多都是過去異常事件外洩後留下的歷史殘影。
                             </p>
                             <p className={bodyClass}>
                               B.A.C.O. 嚴禁向公眾揭露真相。因為在這個資訊高度互聯的時代，一旦「
                               <Redacted>██████</Redacted>
                               」隨著恐懼與認知在人群中擴散，文明將
                               <Redacted>███████</Redacted>
-                              。我們抹除痕跡、備份記憶、重築高牆—只為讓陽光之下的普通人，永遠不必知曉黑暗中究竟存在著什麼。
+                              。我們抹除痕跡、備份
+                              <Redacted>████</Redacted>
+                              、穩定現實——只為讓陽光之下的普通人，永遠不必知曉黑暗中究竟存在著什麼。
                             </p>
+                          </div>
+                        ) : file.id === "secret" ? (
+                          <div className="space-y-4">
+                            {PROTOCOL.map((paragraph) => (
+                              <p key={paragraph} className={bodyClass}>
+                                {paragraph}
+                              </p>
+                            ))}
                           </div>
                         ) : file.id === "world" ? (
                           <div className="space-y-4">

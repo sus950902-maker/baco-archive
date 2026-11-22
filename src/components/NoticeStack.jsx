@@ -19,7 +19,7 @@ function NoticeCard({ notice, onDismiss, onRemove }) {
     const timer = window.setTimeout(() => {
       if (notice.leaving) onRemove(notice.id)
       else onDismiss(notice.id)
-    }, notice.leaving ? LEAVE_MS : 6000)
+    }, notice.leaving ? LEAVE_MS : 3000)
     return () => window.clearTimeout(timer)
   }, [notice.id, notice.leaving, notice.refresh, onDismiss, onRemove])
 
