@@ -29,6 +29,26 @@ const PROTOCOL = [
 
 const bodyClass = "text-base font-[450] leading-8 text-ink sm:text-[17px]"
 
+function markProtocol(text) {
+  return text.split(/(「[^」]*」|（[^）]*）)/).map((piece, index) => {
+    if (piece.startsWith("「") && piece.endsWith("」")) {
+      return (
+        <span key={index}>
+          「<span className="font-bold">{piece.slice(1, -1)}</span>」
+        </span>
+      )
+    }
+    if (piece.startsWith("（") && piece.endsWith("）")) {
+      return (
+        <span key={index} className="text-ash">
+          {piece}
+        </span>
+      )
+    }
+    return piece
+  })
+}
+
 export default function Hero({ user, onNotice }) {
   const [openId, setOpenId] = useState(null)
 
@@ -138,7 +158,7 @@ export default function Hero({ user, onNotice }) {
                           <div className="space-y-4">
                             {PROTOCOL.map((paragraph) => (
                               <p key={paragraph} className={bodyClass}>
-                                {paragraph}
+                                {markProtocol(paragraph)}
                               </p>
                             ))}
                           </div>
