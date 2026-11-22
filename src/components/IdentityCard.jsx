@@ -4,7 +4,7 @@ export default function IdentityCard({ profile, onClose }) {
   const photo = profile.avatarUrl || ""
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-8">
       <button type="button" aria-label="關閉識別證" onClick={onClose} className="absolute inset-0 bg-black/70" />
       <article
         role="dialog"
