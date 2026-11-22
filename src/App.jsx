@@ -99,7 +99,15 @@ export default function App() {
       await signInWithPopup(auth, googleProvider)
     } catch (error) {
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return
-      pushNotice({ code: "AUTH MODULE // DENIED", message: "GOOGLE 驗證未完成" })
+      const blocked =
+        error.code === "auth/popup-blocked" ||
+        error.code === "auth/network-request-failed" ||
+        error.code === "auth/internal-error" ||
+        /popup-blocked|blocked by the browser/i.test(error.message || "")
+      pushNotice({
+        code: "AUTH MODULE // DENIED",
+        message: blocked ? "請關閉阻擋彈窗或廣告攔截相關插件" : "GOOGLE 驗證未完成",
+      })
     }
   }
 
