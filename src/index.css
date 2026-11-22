@@ -319,6 +319,20 @@ main .text-comment {
   border-bottom: 1px solid #dc2626;
 }
 
+.notice-card {
+  transform: translateX(0);
+}
+
+.notice-card.is-leaving {
+  animation: notice-leave 0.48s ease forwards;
+}
+
+@keyframes notice-leave {
+  to {
+    transform: translateX(120%);
+  }
+}
+
 .stamp {
   display: inline-flex;
   align-items: center;

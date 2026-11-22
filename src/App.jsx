@@ -5,6 +5,7 @@ import BootScreen from "./components/BootScreen"
 import Footer from "./components/Footer"
 import Guidelines from "./components/Guidelines"
 import Hero from "./components/Hero"
+import NoticeStack from "./components/NoticeStack"
 import ProfileModal from "./components/ProfileModal"
 import SiteSections from "./components/SiteSections"
 import TopBar from "./components/TopBar"
@@ -17,10 +18,40 @@ export default function App() {
   const [profile, setProfile] = useState(null)
   const [authReady, setAuthReady] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
-  const [authError, setAuthError] = useState("")
+  const [notices, setNotices] = useState([])
 
   const finishBoot = useCallback(() => setBooted(true), [])
   useScrollReveal(booted)
+
+  const pushNotice = useCallback((notice) => {
+    setNotices((current) => {
+      const same = current.find((entry) => entry.code === notice.code && entry.message === notice.message)
+      if (same) {
+        return current.map((entry) => {
+          if (entry.id === same.id) return { ...entry, leaving: false, refresh: (entry.refresh ?? 0) + 1 }
+          return entry.leaving ? entry : { ...entry, leaving: true }
+        })
+      }
+      const item = { id: crypto.randomUUID(), leaving: false, refresh: 0, ...notice }
+      const active = current.filter((entry) => !entry.leaving)
+      let next = [...current, item]
+      if (active.length >= 1) {
+        const oldest = active[0]
+        next = next.map((entry) => (entry.id === oldest.id ? { ...entry, leaving: true } : entry))
+      }
+      return next
+    })
+  }, [])
+
+  const dismissNotice = useCallback((id) => {
+    setNotices((current) =>
+      current.map((entry) => (entry.id === id && !entry.leaving ? { ...entry, leaving: true } : entry)),
+    )
+  }, [])
+
+  const removeNotice = useCallback((id) => {
+    setNotices((current) => current.filter((entry) => entry.id !== id))
+  }, [])
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (next) => {
@@ -43,29 +74,27 @@ export default function App() {
       } catch (error) {
         setProfile(null)
         setProfileOpen(true)
-        setAuthError(error.message || "檔案讀取失敗")
+        pushNotice({ code: "AUTH MODULE // DENIED", message: error.message || "檔案讀取失敗" })
       } finally {
         setAuthReady(true)
       }
     })
-  }, [])
+  }, [pushNotice])
 
   async function login() {
-    setAuthError("")
     try {
       await signInWithPopup(auth, googleProvider)
     } catch (error) {
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return
-      setAuthError("GOOGLE 驗證未完成")
+      pushNotice({ code: "AUTH MODULE // DENIED", message: "GOOGLE 驗證未完成" })
     }
   }
 
   async function logout() {
-    setAuthError("")
     try {
       await signOut(auth)
     } catch (error) {
-      setAuthError(error.message || "登出失敗")
+      pushNotice({ code: "AUTH MODULE // DENIED", message: error.message || "登出失敗" })
     }
   }
 
@@ -86,7 +115,7 @@ export default function App() {
       />
       <div className="relative z-10" data-reveal-root="">
         <main>
-          <Hero />
+          <Hero user={user} onNotice={pushNotice} />
           <Guidelines />
           <SiteSections />
         </main>
@@ -105,22 +134,7 @@ export default function App() {
         />
       )}
 
-      {authError && (
-        <div
-          role="status"
-          className="fixed right-4 bottom-4 z-50 w-[min(100%-2rem,22rem)] border border-alert/70 bg-black p-4 text-ink"
-        >
-          <p className="font-mono text-[11px] tracking-[0.18em] text-alert">AUTH MODULE // DENIED</p>
-          <p className="mt-2 text-sm leading-6 text-ink">{authError}</p>
-          <button
-            type="button"
-            onClick={() => setAuthError("")}
-            className="mt-3 font-mono text-[11px] text-ash hover:text-ink"
-          >
-            [ CLOSE ]
-          </button>
-        </div>
-      )}
+      <NoticeStack notices={notices} onDismiss={dismissNotice} onRemove={removeNotice} />
     </div>
   )
 }
