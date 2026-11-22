@@ -10,7 +10,7 @@ export default function IdentityCard({ profile, onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="identity-card-title"
-        className="relative z-10 w-full max-w-xl border border-[#1a1a1a] bg-[#f4f0e6] text-[#1a1a1a] shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
+        className="relative z-10 w-full max-w-xl border border-[#1a1a1a] bg-white text-[#1a1a1a] shadow-[0_24px_80px_rgba(0,0,0,0.45)]"
       >
         <header className="flex items-center justify-between bg-black px-5 py-3 text-white">
           <p className="font-mono text-[11px] tracking-[0.22em]">B.A.C.O. PERSONNEL</p>
@@ -19,7 +19,7 @@ export default function IdentityCard({ profile, onClose }) {
           </p>
         </header>
         <div className="grid grid-cols-[7.5rem_1fr] gap-5 px-5 py-5 sm:grid-cols-[9rem_1fr] sm:px-6">
-          <div className="aspect-[3/4] overflow-hidden border border-[#1a1a1a] bg-[#e7e1d4]">
+          <div className="aspect-[3/4] overflow-hidden border border-[#1a1a1a] bg-[#f4f4f4]">
             {photo ? (
               <img src={photo} alt="" className="h-full w-full object-cover" />
             ) : (

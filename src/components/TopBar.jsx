@@ -169,55 +169,21 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
             >
               [ 識別證 ]
             </button>
-            <div className="relative flex items-center gap-2">
-              {searchOpen && (
-                <form onSubmit={submitSearch}>
-                  <input
-                    autoFocus
-                    value={searchValue}
-                    disabled={searching}
-                    onChange={(event) => setSearchValue(event.target.value)}
-                    placeholder="名稱或 UID"
-                    aria-label="搜尋名稱或 UID"
-                    className="w-32 border border-line bg-black px-2 py-2 font-mono text-xs text-ink outline-none focus:border-alert sm:w-44"
-                  />
-                </form>
-              )}
-              <button
-                type="button"
-                aria-label="搜尋人員檔案"
-                aria-expanded={searchOpen}
-                onClick={() => {
-                  setSearchOpen((value) => !value)
-                  setResults([])
-                }}
-                className={`${actionClass} px-2`}
-              >
-                <Search className="h-4 w-4" aria-hidden="true" />
-              </button>
-              {results.length > 1 && (
-                <ul className="absolute top-full right-0 z-50 mt-2 max-h-64 w-60 overflow-y-auto border border-white/15 bg-black">
-                  {results.map((record) => (
-                    <li key={record.id}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setResults([])
-                          setSearchOpen(false)
-                          onViewProfile(record)
-                        }}
-                        className="block w-full border-b border-white/10 px-3 py-2 text-left hover:bg-white/5"
-                      >
-                        <span className="block truncate text-sm text-ink">{record.displayName || "未命名"}</span>
-                        <span className="font-mono text-[10px] tracking-[0.14em] text-ash">{record.publicUid || record.uid}</span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
             <button type="button" onClick={onLogout} className={actionClass}>
               [ 登出 ]
+            </button>
+            <button
+              type="button"
+              aria-label="搜尋人員檔案"
+              aria-expanded={searchOpen}
+              aria-controls="archive-search"
+              onClick={() => {
+                setSearchOpen((value) => !value)
+                setResults([])
+              }}
+              className={`${actionClass} px-2`}
+            >
+              <Search className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
         ) : (
@@ -227,6 +193,45 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
         )}
       </div>
     </header>
+
+      {searchOpen && (
+        <form
+          id="archive-search"
+          onSubmit={submitSearch}
+          className="fixed inset-x-0 z-40 border-b border-white/10 bg-black px-4 py-3 sm:px-6"
+          style={{ top: headerHeight }}
+        >
+          <input
+            autoFocus
+            value={searchValue}
+            disabled={searching}
+            onChange={(event) => setSearchValue(event.target.value)}
+            placeholder="名稱或 UID"
+            aria-label="搜尋名稱或 UID"
+            className="ml-auto block w-full max-w-sm border border-line bg-black px-3 py-2 font-mono text-xs text-ink outline-none focus:border-alert"
+          />
+          {results.length > 1 && (
+            <ul className="ml-auto mt-2 max-h-64 w-full max-w-sm overflow-y-auto border border-white/15 bg-black">
+              {results.map((record) => (
+                <li key={record.id}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResults([])
+                      setSearchOpen(false)
+                      onViewProfile(record)
+                    }}
+                    className="block w-full border-b border-white/10 px-3 py-2 text-left hover:bg-white/5"
+                  >
+                    <span className="block truncate text-sm text-ink">{record.displayName || "未命名"}</span>
+                    <span className="font-mono text-[10px] tracking-[0.14em] text-ash">{record.publicUid || record.uid}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </form>
+      )}
 
       <button
         type="button"
