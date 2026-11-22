@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react"
+import imageCompression from "browser-image-compression"
 import { updateProfile } from "firebase/auth"
 import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import { db } from "../firebase"
@@ -24,16 +25,58 @@ function place(natural, zoom, offsetX, offsetY) {
   }
 }
 
+function publicIdFromUrl(url) {
+  if (!url || !url.includes("res.cloudinary.com")) return ""
+  try {
+    const path = new URL(url).pathname
+    const marker = "/image/upload/"
+    const start = path.indexOf(marker)
+    if (start < 0) return ""
+    const rest = path.slice(start + marker.length).replace(/^v\d+\//, "")
+    return decodeURIComponent(rest.replace(/\.[a-z0-9]+$/i, ""))
+  } catch {
+    return ""
+  }
+}
+
+async function compressAvatar(file) {
+  const base = { maxSizeMB: 80 / 1024, maxWidthOrHeight: 400, initialQuality: 0.8 }
+  const attempts = [
+    { ...base, useWebWorker: true, fileType: "image/webp" },
+    { ...base, useWebWorker: false, fileType: "image/webp" },
+    { ...base, useWebWorker: false, fileType: "image/jpeg" },
+  ]
+  let lastError = null
+  for (const options of attempts) {
+    try {
+      const blob = await imageCompression(file, options)
+      const extension = options.fileType === "image/webp" ? "webp" : "jpg"
+      return new File([blob], `avatar.${extension}`, { type: options.fileType })
+    } catch (error) {
+      lastError = error
+    }
+  }
+  throw lastError || new Error("影像壓縮失敗")
+}
+
 async function uploadImage(file) {
   const body = new FormData()
   body.append("file", file)
   body.append("upload_preset", "DrawingProject")
   const response = await fetch(CLOUDINARY_URL, { method: "POST", body })
   const payload = await response.json()
-  if (!response.ok || !payload.secure_url) {
+  if (!response.ok || !payload.secure_url || !payload.public_id) {
     throw new Error(payload?.error?.message || "上傳失敗")
   }
-  return payload.secure_url
+  return payload
+}
+
+function deleteOldAvatar(publicId) {
+  fetch("/api/delete-image", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ publicId }),
+  }).catch(() => {})
 }
 
 export default function ProfileModal({ user, profile, onClose, onSaved }) {
@@ -180,10 +223,15 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
 
     try {
       let avatarUrl = savedAvatar
+      let avatarPublicId = profile?.avatarPublicId || publicIdFromUrl(savedAvatar)
       if (adjusted) {
         if (!natural.width) throw new Error("影像尚未載入")
+        setStatus("影像壓縮中")
+        const compressed = await compressAvatar(await cropFile())
         setStatus("影像上傳中")
-        avatarUrl = await uploadImage(await cropFile())
+        const uploaded = await uploadImage(compressed)
+        avatarUrl = uploaded.secure_url
+        avatarPublicId = uploaded.public_id
       }
 
       const record = {
@@ -191,6 +239,7 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
         email: user.email || "",
         displayName: name,
         avatarUrl,
+        avatarPublicId,
         updatedAt: serverTimestamp(),
       }
       await setDoc(doc(db, "users", user.uid), record)
@@ -198,6 +247,8 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
         displayName: name,
         photoURL: avatarUrl || null,
       })
+      const oldPublicId = profile?.avatarPublicId || publicIdFromUrl(profile?.avatarUrl)
+      if (oldPublicId && avatarPublicId && oldPublicId !== avatarPublicId) deleteOldAvatar(oldPublicId)
       onSaved({ ...record, updatedAt: Date.now() })
     } catch (saveError) {
       setError(saveError.message || "同步失敗")
