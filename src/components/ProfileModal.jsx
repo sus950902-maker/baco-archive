@@ -4,6 +4,7 @@ import { updateProfile } from "firebase/auth"
 import { doc, serverTimestamp, setDoc } from "firebase/firestore"
 import { db } from "../firebase"
 import { issuePublicUid } from "../publicUid"
+import IdentityCard from "./IdentityCard"
 
 const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/afxj9khk/image/upload"
 const MAX_BYTES = 5 * 1024 * 1024
@@ -91,6 +92,7 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
   const [busy, setBusy] = useState(false)
+  const [cardOpen, setCardOpen] = useState(false)
   const drag = useRef(null)
   const imageRef = useRef(null)
   const blobRef = useRef("")
@@ -102,11 +104,15 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
   useEffect(() => {
     const onKey = (event) => {
       if (event.key !== "Escape" || busy) return
+      if (cardOpen) {
+        setCardOpen(false)
+        return
+      }
       onClose()
     }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
-  }, [busy, onClose])
+  }, [busy, cardOpen, onClose])
 
   useEffect(() => {
     if (!savedAvatar) return undefined
@@ -377,6 +383,14 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
           <button
             type="button"
             disabled={busy}
+            onClick={() => setCardOpen(true)}
+            className="border border-line px-3 py-2 font-mono text-xs tracking-wide text-ink transition-colors hover:border-alert hover:text-alert disabled:opacity-40"
+          >
+            [ 預覽識別證 ]
+          </button>
+          <button
+            type="button"
+            disabled={busy}
             onClick={onClose}
             className="border border-line px-3 py-2 font-mono text-xs tracking-wide text-ash transition-colors hover:text-ink disabled:opacity-40"
           >
@@ -384,6 +398,16 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
           </button>
         </div>
       </form>
+      {cardOpen && (
+        <IdentityCard
+          profile={{
+            displayName: displayName.trim() || "未命名",
+            publicUid: profile?.publicUid || "",
+            avatarUrl: preview,
+          }}
+          onClose={() => setCardOpen(false)}
+        />
+      )}
     </div>
   )
 }

@@ -156,19 +156,6 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
             <button type="button" onClick={onEditProfile} className={actionClass}>
               [ 檔案設定 ]
             </button>
-            <button
-              type="button"
-              onClick={() =>
-                onViewProfile({
-                  displayName: profile?.displayName || user.displayName || "未命名",
-                  publicUid: profile?.publicUid || "",
-                  avatarUrl: profile?.avatarUrl || user.photoURL || "",
-                })
-              }
-              className={actionClass}
-            >
-              [ 識別證 ]
-            </button>
             <button type="button" onClick={onLogout} className={actionClass}>
               [ 登出 ]
             </button>
