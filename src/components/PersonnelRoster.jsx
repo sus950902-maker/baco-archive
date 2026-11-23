@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 import { collection, onSnapshot, query, where } from "firebase/firestore"
 import { characterTitle, claimCharacter, FACTION_COLOR, publicCharacter } from "../characters"
+import PortraitArt from "./PortraitArt"
 import { db } from "../firebase"
 
 const FILTERS = ["全部", "我的檔案", "調查員", "異常", "民眾", "議會"]
@@ -153,25 +154,33 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           {filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
         </p>
       ) : (
-        <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="roster-grid mt-6 grid gap-4 pt-10 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-              <button type="button" onClick={() => onOpen(record)} className="panel hud-corner flex w-full items-start gap-4 p-4 text-left hover:border-black">
-                {record.avatarUrl ? (
-                  <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
-                ) : (
-                  <span className="flex aspect-[7/9] w-16 shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
-                    {(record.name || "?").slice(0, 1)}
+              <button type="button" onClick={() => onOpen(record)} className="panel hud-corner relative w-full overflow-visible text-left hover:border-black">
+                <span data-card-copy className="flex w-max max-w-full items-end gap-4 p-4">
+                  {record.avatarUrl ? (
+                    <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
+                  ) : (
+                    <span className="flex aspect-[7/9] w-16 shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
+                      {(record.name || "?").slice(0, 1)}
+                    </span>
+                  )}
+                  <span>
+                    <span className="block text-base font-medium">{characterTitle(record)}</span>
+                    <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
+                      {record.faction}
+                    </span>
+                    <span className="mt-1 block font-mono text-[11px] text-ash">{record.department}</span>
+                    <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {record.uid}</span>
                   </span>
-                )}
-                <span className="min-w-0">
-                  <span className="block truncate text-base font-medium">{characterTitle(record)}</span>
-                  <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
-                    {record.faction}
-                  </span>
-                  <span className="mt-1 block truncate font-mono text-[11px] text-ash">{record.department}</span>
-                  <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {record.uid}</span>
                 </span>
+                <PortraitArt
+                  url={record.portraitUrl}
+                  ratio={{ x: record.portraitX, y: record.portraitY }}
+                  scale={record.portraitScale}
+                  frameClass=""
+                />
               </button>
             </li>
           ))}

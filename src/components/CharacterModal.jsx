@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
 import { characterTitle, FACTION_COLOR } from "../characters"
+import PortraitArt from "./PortraitArt"
 
 export default function CharacterModal({ character, user, staff, onClose, onEdit }) {
   const canEdit = Boolean(onEdit) && Boolean(user) && (staff || character.ownerUid === user?.uid)
@@ -21,18 +22,28 @@ export default function CharacterModal({ character, user, staff, onClose, onEdit
         role="dialog"
         aria-modal="true"
         aria-labelledby="character-title"
-        className="dossier-scroll hud-corner relative z-10 my-auto max-h-[calc(100dvh-2rem)] w-[min(40rem,calc(100dvw-1.5rem))] border border-white/15 bg-black p-4 text-ink shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:p-7"
+        className="dossier-scroll hud-corner relative z-10 my-auto max-h-[calc(100dvh-2rem)] w-[min(40rem,calc(100dvw-1.5rem))] border border-white/15 bg-black px-4 pt-16 pb-4 text-ink shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-7 sm:pt-20 sm:pb-7"
       >
-        <p className="font-mono text-[11px] tracking-[0.22em]" style={{ color: tone }}>
-          CHARACTER FILE // {character.uid}
-        </p>
-        <h2 id="character-title" className="mt-2 text-xl font-medium text-ink">
-          {characterTitle(character)}
-        </h2>
-        <p className="mt-2 font-mono text-[11px] tracking-[0.14em] text-ash">
-          {character.faction} // {character.department || "無 / 民間"}
-        </p>
-        {character.ownerName && <p className="mt-1 font-mono text-[11px] text-ash">持有者 // {character.ownerName}</p>}
+        <div className="relative -mr-4 overflow-visible sm:-mr-7">
+          <div data-card-copy className="w-max max-w-full pr-4">
+            <p className="font-mono text-[11px] tracking-[0.22em]" style={{ color: tone }}>
+              CHARACTER FILE // {character.uid}
+            </p>
+            <h2 id="character-title" className="mt-2 text-xl font-medium text-ink">
+              {characterTitle(character)}
+            </h2>
+            <p className="mt-2 font-mono text-[11px] tracking-[0.14em] text-ash">
+              {character.faction} // {character.department || "無 / 民間"}
+            </p>
+            {character.ownerName && <p className="mt-1 font-mono text-[11px] text-ash">持有者 // {character.ownerName}</p>}
+          </div>
+          <PortraitArt
+            url={character.portraitUrl}
+            ratio={{ x: character.portraitX, y: character.portraitY }}
+            scale={character.portraitScale}
+            frameClass=""
+          />
+        </div>
         {character.bio && <p className="mt-4 text-sm leading-7 text-ink">{character.bio}</p>}
         <figure className="mt-5">
           <figcaption className="font-mono text-[10px] tracking-[0.16em] text-ash">兩吋照片</figcaption>

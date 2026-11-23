@@ -18,7 +18,7 @@ const LINKS = [
 const DOMAIN_LINKS = [
   { href: "#intranet", page: "intranet", label: "內部網域" },
   { href: "#staff", page: "staff", label: "人員配置" },
-  { href: "#staff-admin", page: "staff-admin", label: "人員配置(管理)", staffOnly: true },
+  { href: "#staff-admin", page: "staff-admin", label: "人員管理", staffOnly: true, tone: "signal" },
 ]
 
 function IdentityMark({ src, name }) {
@@ -297,7 +297,7 @@ export default function TopBar({
             href={link.href}
             tabIndex={open ? 0 : -1}
             onClick={() => setOpen(false)}
-            className={`block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}
+            className={`block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors ${link.tone === "signal" ? "bg-signal text-black hover:bg-signal/80" : `hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}`}
           >
             {link.label}
           </a>

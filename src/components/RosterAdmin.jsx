@@ -72,6 +72,7 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     try {
       await removeCharacter(record)
       deleteStoredImage(record.avatarPublicId || publicIdFromUrl(record.avatarUrl))
+      deleteStoredImage(record.portraitPublicId || publicIdFromUrl(record.portraitUrl))
       deleteStoredImage(record.idCardPublicId || publicIdFromUrl(record.idCardUrl))
       setPendingDelete("")
       onNotice({ code: "ROSTER // DELETED", message: `${record.bindCode} 與角色檔案已刪除。` })
@@ -83,7 +84,7 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
   if (!ready) {
     return (
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
-        <h2 className="text-2xl font-medium sm:text-3xl">人員配置(管理)</h2>
+        <h2 className="text-2xl font-medium sm:text-3xl">人員管理</h2>
         <p className="mt-4 font-mono text-xs tracking-wide text-ash">權限核對中</p>
       </section>
     )
@@ -94,7 +95,7 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="reveal-right mb-5">
           <p className="font-mono text-[11px] tracking-[0.22em] text-comment">ROSTER ADMIN // RESTRICTED</p>
-          <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員配置(管理)</h2>
+          <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員管理</h2>
         </div>
         <div className="panel hud-corner p-5 sm:p-8">
           <p className="font-mono text-sm tracking-wide">權限不足。本區僅限中級以上管理權限調閱。</p>
@@ -107,7 +108,7 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">ROSTER ADMIN // BINDING CODES</p>
-        <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員配置(管理)</h2>
+        <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員管理</h2>
       </div>
       <div className="panel hud-corner p-5 sm:p-6">
         <p className="font-mono text-[11px] tracking-[0.16em] text-ash">生成時先指定陣營，一碼只對應一張角色卡</p>
