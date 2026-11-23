@@ -248,5 +248,6 @@ export function publicCharacter(id, data) {
     idCardUrl: data.idCardUrl || "",
     idCardPublicId: data.idCardPublicId || "",
     bio: data.bio || "",
+    createdAt: data.createdAt?.toMillis?.() || 0,
   }
 }

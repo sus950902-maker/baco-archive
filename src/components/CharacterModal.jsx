@@ -24,10 +24,10 @@ export default function CharacterModal({ character, user, staff, onClose, onEdit
         aria-labelledby="character-title"
         className="dossier-scroll hud-corner relative z-10 my-auto max-h-[calc(100dvh-2rem)] w-[min(40rem,calc(100dvw-1.5rem))] border border-white/15 bg-black px-4 pt-16 pb-4 text-ink shadow-[0_24px_80px_rgba(0,0,0,0.55)] sm:px-7 sm:pt-20 sm:pb-7"
       >
-        <div className="relative -mr-4 overflow-visible sm:-mr-7">
+        <div className={`relative -mr-4 overflow-visible sm:-mr-7 ${character.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
           <div data-card-copy className="w-max max-w-full pr-4">
             <p className="font-mono text-[11px] tracking-[0.22em]" style={{ color: tone }}>
-              CHARACTER FILE // {character.uid}
+              UID：{character.uid}
             </p>
             <h2 id="character-title" className="mt-2 text-xl font-medium text-ink">
               {characterTitle(character)}

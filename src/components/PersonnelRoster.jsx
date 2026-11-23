@@ -21,18 +21,18 @@ function byFileNo(left, right) {
     if (!rightNumbered) return -1
     if (leftNo !== rightNo) return leftNo - rightNo
   }
-  return (left.fileNo || left.uid || "").localeCompare(right.fileNo || right.uid || "", "zh")
+  return (left.createdAt || 0) - (right.createdAt || 0) || (left.id || "").localeCompare(right.id || "")
 }
 
-function shuffle(list) {
-  const next = [...list]
-  for (let index = next.length - 1; index > 0; index -= 1) {
-    const swap = Math.floor(Math.random() * (index + 1))
-    const current = next[index]
-    next[index] = next[swap]
-    next[swap] = current
-  }
-  return next
+const MINE_ORDER = ["議會", "調查員", "民眾", "異常"]
+
+function byMine(left, right) {
+  const leftRank = MINE_ORDER.indexOf(left.faction)
+  const rightRank = MINE_ORDER.indexOf(right.faction)
+  const leftIndex = leftRank === -1 ? MINE_ORDER.length : leftRank
+  const rightIndex = rightRank === -1 ? MINE_ORDER.length : rightRank
+  if (leftIndex !== rightIndex) return leftIndex - rightIndex
+  return byFileNo(left, right)
 }
 
 export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdit, initialFilter = "全部" }) {
@@ -43,7 +43,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
   const [error, setError] = useState("")
   const [loadError, setLoadError] = useState("")
   const [entrance, setEntrance] = useState(0)
-  const [allOrder, setAllOrder] = useState([])
+  const [search, setSearch] = useState("")
 
   useEffect(() => {
     const roster = query(collection(db, "characters"), where("status", "==", "bound"))
@@ -57,25 +57,14 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
     )
   }, [])
 
-  useEffect(() => {
-    setAllOrder((current) => {
-      const ids = records.map((record) => record.id)
-      const kept = current.filter((id) => ids.includes(id))
-      const added = ids.filter((id) => !current.includes(id))
-      if (!added.length && kept.length === current.length) return current
-      if (!kept.length) return shuffle(ids)
-      return [...kept, ...shuffle(added)]
-    })
-  }, [records])
-
+  const needle = search.trim().toLowerCase()
   const visible = records.filter((record) => {
-    if (filter === "我的檔案") return Boolean(user) && record.ownerUid === user.uid
-    return filter === "全部" || record.faction === filter
+    const inFaction = filter === "我的檔案" ? Boolean(user) && record.ownerUid === user.uid : filter === "全部" || record.faction === filter
+    if (!inFaction) return false
+    if (!needle) return true
+    return (record.name || "").toLowerCase().includes(needle) || (record.fileNo || "").toLowerCase().includes(needle)
   })
-  const ordered =
-    filter === "全部"
-      ? [...visible].sort((left, right) => allOrder.indexOf(left.id) - allOrder.indexOf(right.id))
-      : [...visible].sort(byFileNo)
+  const ordered = [...visible].sort(filter === "全部" || filter === "我的檔案" ? byMine : byFileNo)
 
   async function claim(event) {
     event.preventDefault()
@@ -130,7 +119,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         {error && <p className="mt-3 font-mono text-[11px] text-alert">{error}</p>}
       </form>
 
-      <div className="mt-6 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap items-center gap-2">
         {FILTERS.map((item) => (
           <button
             key={item}
@@ -138,27 +127,33 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
             onClick={() => {
               setFilter(item)
               setEntrance((current) => current + 1)
-              if (item === "全部") setAllOrder(shuffle(records.map((record) => record.id)))
             }}
             className={`border px-3 py-1.5 font-mono text-xs tracking-wide ${filter === item ? "border-black bg-black text-white" : "border-black/20 bg-white text-ink"}`}
           >
             {item}
           </button>
         ))}
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="搜索名稱或編號"
+          aria-label="搜索名稱或編號"
+          className="ml-auto w-full border border-black/20 bg-white px-3 py-1.5 font-mono text-xs text-black outline-none focus:border-alert sm:w-52"
+        />
       </div>
 
       {loadError ? (
         <p className="mt-8 font-mono text-xs tracking-wide text-alert">{loadError}</p>
       ) : ordered.length === 0 ? (
-        <p className="mt-8 font-mono text-xs tracking-wide text-ash">
-          {filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
+        <p className="mt-16 font-mono text-xs tracking-wide text-ash">
+          {needle ? "沒有符合的檔案" : filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
         </p>
       ) : (
-        <ul className="roster-grid mt-6 grid gap-x-4 gap-y-10 pt-10 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="roster-grid mt-16 grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-              <button type="button" onClick={() => onOpen(record)} className="panel hud-corner relative w-full overflow-visible p-0 text-left hover:border-black">
-                <span data-card-copy className="flex w-max max-w-full items-end gap-4 p-4">
+              <button type="button" onClick={() => onOpen(record)} className={`panel character-card hud-corner relative w-full overflow-visible p-0 text-left hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
+                <span data-card-copy className="flex w-full min-w-0 items-end gap-4 p-4">
                   {record.avatarUrl ? (
                     <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
                   ) : (
@@ -166,13 +161,13 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                       {(record.name || "?").slice(0, 1)}
                     </span>
                   )}
-                  <span>
-                    <span className="block text-base font-medium">{characterTitle(record)}</span>
-                    <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
+                  <span className="min-w-0">
+                    <span className="block truncate text-base font-medium">{characterTitle(record)}</span>
+                    <span className="mt-1 block truncate font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
                       {factionLabel(record)}
                     </span>
-                    <span className="mt-1 block font-mono text-[11px] text-ash">{record.department}</span>
-                    <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {record.uid}</span>
+                    <span className="mt-1 block truncate font-mono text-[11px] text-ash">{record.department}</span>
+                    <span className="mt-2 block truncate font-mono text-[10px] tracking-[0.14em] text-ash">UID：{record.uid}</span>
                   </span>
                 </span>
                 <PortraitArt

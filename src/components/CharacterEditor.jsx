@@ -95,7 +95,7 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
     <section className="roster-section mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
         <p className="font-mono text-[11px] tracking-[0.22em]" style={{ color: FACTION_COLOR[faction] || "#246b3d" }}>
-          CHARACTER FILE // {character.uid} // {faction}
+          UID：{character.uid} // {faction}
         </p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">編輯角色卡</h2>
       </div>
@@ -142,13 +142,13 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
               {(name || character.name || "?").slice(0, 1)}
             </span>
           )}
-          <span>
-            <span className="block text-base font-medium">{name.trim() || "未命名"}</span>
-            <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[faction] || "#5c5854" }}>
+          <span className="min-w-0">
+            <span className="block truncate text-base font-medium">{name.trim() || "未命名"}</span>
+            <span className="mt-1 block truncate font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[faction] || "#5c5854" }}>
               {factionLabel({ faction, fileNo })}
             </span>
-            <span className="mt-1 block font-mono text-[11px] text-ash">{department}</span>
-            <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {character.uid}</span>
+            <span className="mt-1 block truncate font-mono text-[11px] text-ash">{department}</span>
+            <span className="mt-2 block truncate font-mono text-[10px] tracking-[0.14em] text-ash">UID：{character.uid}</span>
           </span>
         </PortraitField>
         <button type="submit" disabled={busy} className="mx-auto w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">

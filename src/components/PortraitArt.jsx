@@ -18,29 +18,21 @@ export default function PortraitArt({ url, ratio, scale = 1, frameClass }) {
 
   useLayoutEffect(() => {
     const node = frameRef.current
-    const card = node?.parentElement
-    const copy = card?.querySelector("[data-card-copy]")
-    if (!node || !card) return undefined
+    if (!node) return undefined
     const measure = () => {
-      const cardBox = card.getBoundingClientRect()
-      const copyBox = copy?.getBoundingClientRect()
-      const borderLeft = Number.parseFloat(getComputedStyle(card).borderLeftWidth) || 0
-      const left = copyBox ? Math.max(0, copyBox.right - cardBox.left - borderLeft) : 0
-      node.style.left = `${left}px`
       const box = node.getBoundingClientRect()
       setFrame((current) => (current.width === box.width && current.height === box.height ? current : { width: box.width, height: box.height }))
     }
     measure()
     const observer = new ResizeObserver(measure)
-    observer.observe(card)
-    if (copy) observer.observe(copy)
+    observer.observe(node)
     return () => observer.disconnect()
   }, [source])
 
   if (!source) return null
 
   return (
-    <span ref={frameRef} className={`portrait-frame absolute top-0 right-0 bottom-0 ${frameClass || ""}`}>
+    <span ref={frameRef} className={`portrait-frame ${frameClass || ""}`}>
       <img
         src={source}
         alt=""

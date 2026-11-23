@@ -70,12 +70,14 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
 
   async function destroy(record) {
     try {
+      const avatarId = record.avatarPublicId || publicIdFromUrl(record.avatarUrl)
+      if (record.avatarUrl?.includes("res.cloudinary.com") && !avatarId) throw new Error("找不到頭像的圖片庫編號")
+      await deleteStoredImage(avatarId)
+      await deleteStoredImage(record.portraitPublicId || publicIdFromUrl(record.portraitUrl))
+      await deleteStoredImage(record.idCardPublicId || publicIdFromUrl(record.idCardUrl))
       await removeCharacter(record)
-      deleteStoredImage(record.avatarPublicId || publicIdFromUrl(record.avatarUrl))
-      deleteStoredImage(record.portraitPublicId || publicIdFromUrl(record.portraitUrl))
-      deleteStoredImage(record.idCardPublicId || publicIdFromUrl(record.idCardUrl))
       setPendingDelete("")
-      onNotice({ code: "ROSTER // DELETED", message: `${record.bindCode} 與角色檔案已刪除。` })
+      onNotice({ code: "ROSTER // DELETED", message: `${record.bindCode} 與角色檔案已刪除。頭像已從圖片庫移除。` })
     } catch (deleteError) {
       onNotice({ code: "ROSTER // DENIED", message: deleteError.message || "刪除失敗" })
     }

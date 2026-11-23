@@ -11,7 +11,9 @@ export function publicIdFromUrl(url) {
     const marker = "/image/upload/"
     const start = path.indexOf(marker)
     if (start < 0) return ""
-    const rest = path.slice(start + marker.length).replace(/^v\d+\//, "")
+    let rest = path.slice(start + marker.length)
+    const versioned = rest.match(/^(?:.*\/)?v\d+\/(.+)$/)
+    if (versioned) rest = versioned[1]
     return decodeURIComponent(rest.replace(/\.[a-z0-9]+$/i, ""))
   } catch {
     return ""
@@ -57,11 +59,14 @@ export async function uploadImage(file) {
   return payload
 }
 
-export function deleteStoredImage(publicId) {
+export async function deleteStoredImage(publicId) {
   if (!publicId) return
-  fetch("/api/delete-image", {
+  const response = await fetch("/api/delete-image", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ publicId }),
-  }).catch(() => {})
+  })
+  const payload = await response.json().catch(() => ({}))
+  if (!response.ok) throw new Error(payload.error || "圖片庫刪除失敗")
+  if (payload.result && payload.result !== "ok" && payload.result !== "not found") throw new Error("圖片庫刪除失敗")
 }

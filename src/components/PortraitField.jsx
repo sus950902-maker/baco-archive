@@ -3,7 +3,6 @@ import { clampPortrait, fitPortrait, portraitOffset, portraitRatio, portraitSour
 
 const PortraitField = forwardRef(function PortraitField({ existingUrl = "", ratio, scale = 1, disabled = false, children }, ref) {
   const frameRef = useRef(null)
-  const copyRef = useRef(null)
   const drag = useRef(null)
   const [link, setLink] = useState(existingUrl)
   const [sources, setSources] = useState(() => portraitSources(existingUrl))
@@ -19,22 +18,14 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
 
   useLayoutEffect(() => {
     const node = frameRef.current
-    const copy = copyRef.current
-    const card = node?.parentElement
-    if (!node || !card) return undefined
+    if (!node) return undefined
     const measure = () => {
-      const cardBox = card.getBoundingClientRect()
-      const copyBox = copy?.getBoundingClientRect()
-      const borderLeft = Number.parseFloat(getComputedStyle(card).borderLeftWidth) || 0
-      const left = copyBox ? Math.max(0, copyBox.right - cardBox.left - borderLeft) : 0
-      node.style.left = `${left}px`
       const box = node.getBoundingClientRect()
       setFrame((current) => (current.width === box.width && current.height === box.height ? current : { width: box.width, height: box.height }))
     }
     measure()
     const observer = new ResizeObserver(measure)
-    observer.observe(card)
-    if (copy) observer.observe(copy)
+    observer.observe(node)
     return () => observer.disconnect()
   }, [preview])
 
@@ -136,13 +127,13 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
         <div className="mt-2 flex justify-center overflow-visible pt-16">
           <div className="roster-slot">
-            <div className="panel hud-corner relative overflow-visible">
-              <div ref={copyRef} className="flex w-max max-w-full items-end gap-4 p-4">
+            <div className="panel character-card hud-corner relative min-h-[var(--portrait-h)] overflow-visible pr-[var(--portrait-w)]">
+              <div className="flex w-full min-w-0 items-end gap-4 p-4">
                 {children}
               </div>
               <div
                 ref={frameRef}
-                className={`portrait-frame absolute top-0 right-0 bottom-0 shadow-[inset_1px_0_0_rgba(0,0,0,0.45)] ${preview ? "cursor-grab touch-none" : ""}`}
+                className={`portrait-frame shadow-[inset_1px_0_0_rgba(0,0,0,0.45)] ${preview ? "cursor-grab touch-none" : ""}`}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={() => {

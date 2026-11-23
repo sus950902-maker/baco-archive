@@ -151,10 +151,20 @@ body {
 
 .roster-grid {
   overflow: clip;
-  overflow-clip-margin: 2.75rem 0 0 0;
+  overflow-clip-margin: 2.75rem 0.75rem 0.75rem 0;
+}
+
+:root {
+  --portrait-w: 8.75rem;
+  --portrait-h: calc(2rem + 4rem * 9 / 7);
 }
 
 .portrait-frame {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--portrait-w);
+  height: var(--portrait-h);
   clip-path: inset(-28% 0 0 0);
 }
 
@@ -283,6 +293,10 @@ main .text-comment {
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.72);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+.character-card {
+  box-shadow: 7px 8px 0 rgba(26, 26, 26, 0.16);
 }
 
 .faction-card {
