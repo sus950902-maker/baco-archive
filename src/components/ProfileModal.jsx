@@ -252,7 +252,11 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
         avatarPublicId,
         updatedAt: serverTimestamp(),
       }
-      await setDoc(doc(db, "users", user.uid), record)
+      if (!profile) {
+        record.role = "user"
+        record.createdAt = serverTimestamp()
+      }
+      await setDoc(doc(db, "users", user.uid), record, { merge: true })
       await updateProfile(user, {
         displayName: name,
         photoURL: avatarUrl || null,

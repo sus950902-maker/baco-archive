@@ -1,23 +1,35 @@
 import { useCallback, useEffect, useState } from "react"
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
-import { collection, doc, getDoc, getDocs, limit, query, setDoc, where } from "firebase/firestore"
+import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, where } from "firebase/firestore"
 import BootScreen from "./components/BootScreen"
 import Footer from "./components/Footer"
+import CharacterEditor from "./components/CharacterEditor"
+import CharacterModal from "./components/CharacterModal"
 import Guidelines from "./components/Guidelines"
 import Hero from "./components/Hero"
 import Intranet from "./components/Intranet"
+import PersonnelRoster from "./components/PersonnelRoster"
+import RosterAdmin from "./components/RosterAdmin"
 import IdentityCard from "./components/IdentityCard"
 import NoticeStack from "./components/NoticeStack"
 import ProfileModal from "./components/ProfileModal"
 import SiteSections from "./components/SiteSections"
 import TopBar from "./components/TopBar"
+import { isStaffRole, roleFromClearance } from "./characters"
 import { readStoredClearance, storeClearance } from "./clearance"
 import { auth, db, googleProvider } from "./firebase"
 import { issuePublicUid } from "./publicUid"
 import { useScrollReveal } from "./scrollReveal"
 
+const PAGES = {
+  "#intranet": "intranet",
+  "#staff": "staff",
+  "#staff-admin": "staff-admin",
+  "#card": "card",
+}
+
 function readPage() {
-  return window.location.hash === "#intranet" ? "intranet" : "archive"
+  return PAGES[window.location.hash] || "archive"
 }
 
 export default function App() {
@@ -30,6 +42,8 @@ export default function App() {
   const [notices, setNotices] = useState([])
   const [viewedProfile, setViewedProfile] = useState(null)
   const [clearance, setClearance] = useState(null)
+  const [openCharacter, setOpenCharacter] = useState(null)
+  const [editingCharacter, setEditingCharacter] = useState(null)
 
   const finishBoot = useCallback(() => setBooted(true), [])
   useScrollReveal(booted)
@@ -45,7 +59,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    if (page === "intranet") {
+    if (page !== "archive") {
       window.scrollTo(0, 0)
       return
     }
@@ -86,10 +100,18 @@ export default function App() {
     setNotices((current) => current.filter((entry) => entry.id !== id))
   }, [])
 
-  function grantClearance(level) {
+  async function grantClearance(level) {
     if (!user) return
+    const role = roleFromClearance(level)
     storeClearance(user.uid, level)
     setClearance(level)
+    try {
+      await setDoc(doc(db, "users", user.uid), { role, updatedAt: serverTimestamp() }, { merge: true })
+      setProfile((current) => ({ ...(current || {}), role }))
+    } catch (error) {
+      pushNotice({ code: "CLEARANCE // DENIED", message: error.message || "權限寫入失敗" })
+      return
+    }
     pushNotice({
       code: "CLEARANCE // ISSUED",
       message: level === "high" ? "高級管理權限已核發。" : "中級管理權限已核發。",
@@ -110,6 +132,16 @@ export default function App() {
         const snap = await getDoc(doc(db, "users", next.uid))
         if (snap.exists()) {
           const data = snap.data()
+          const storedLevel = readStoredClearance(next.uid)
+          if (storedLevel && !isStaffRole(data.role)) {
+            const role = roleFromClearance(storedLevel)
+            try {
+              await setDoc(doc(db, "users", next.uid), { role }, { merge: true })
+              data.role = role
+            } catch {
+              data.role = role
+            }
+          }
           if (!data.publicUid) {
             try {
               const publicUid = await issuePublicUid()
@@ -188,8 +220,18 @@ export default function App() {
     return records
   }
 
+  function openEditor(character) {
+    setEditingCharacter(character)
+    setOpenCharacter(null)
+    if (window.location.hash !== "#card") window.location.hash = "#card"
+  }
+
+  const role = isStaffRole(profile?.role) ? profile.role : roleFromClearance(clearance)
+  const staff = isStaffRole(role)
+  const shownClearance = role === "admin" ? "high" : role === "moderator" ? "mid" : null
+
   return (
-    <div className="relative min-h-screen">
+    <div className="relative flex min-h-screen flex-col">
       <div className="scanlines" />
       <div className="scanbar" />
 
@@ -203,15 +245,38 @@ export default function App() {
         onLogin={login}
         onLogout={logout}
         onEditProfile={() => setProfileOpen(true)}
-        clearance={clearance}
+        clearance={shownClearance}
+        staff={staff}
         onSearch={searchProfiles}
         onGrantClearance={grantClearance}
         onViewProfile={setViewedProfile}
       />
-      <div className="relative z-10" data-reveal-root="">
-        <main>
+      <div className="relative z-10 flex flex-1 flex-col" data-reveal-root="">
+        <main className="flex-1">
           {page === "intranet" ? (
             <Intranet />
+          ) : page === "staff" ? (
+            <PersonnelRoster
+              user={user}
+              profile={profile}
+              onNotice={pushNotice}
+              onOpen={setOpenCharacter}
+              onEdit={openEditor}
+            />
+          ) : page === "staff-admin" ? (
+            <RosterAdmin staff={staff} ready={authReady} onNotice={pushNotice} />
+          ) : page === "card" && editingCharacter ? (
+            <CharacterEditor
+              key={editingCharacter.id}
+              character={editingCharacter}
+              onNotice={pushNotice}
+              onSaved={setEditingCharacter}
+            />
+          ) : page === "card" ? (
+            <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+              <h2 className="text-2xl font-medium sm:text-3xl">編輯角色卡</h2>
+              <p className="mt-4 font-mono text-xs tracking-wide text-ash">請先在人員配置輸入綁定碼。</p>
+            </section>
           ) : (
             <>
               <Hero user={user} onNotice={pushNotice} />
@@ -236,6 +301,16 @@ export default function App() {
       )}
 
       {viewedProfile && <IdentityCard profile={viewedProfile} onClose={() => setViewedProfile(null)} />}
+
+      {openCharacter && (
+        <CharacterModal
+          character={openCharacter}
+          user={user}
+          staff={staff}
+          onClose={() => setOpenCharacter(null)}
+          onEdit={openEditor}
+        />
+      )}
 
       <NoticeStack notices={notices} onDismiss={dismissNotice} onRemove={removeNotice} />
     </div>

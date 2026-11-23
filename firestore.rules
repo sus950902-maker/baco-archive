@@ -1,10 +1,65 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isStaff() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['moderator', 'admin'];
+    }
+
+    function isBind() {
+      return signedIn()
+        && resource.data.status == 'unassigned'
+        && request.resource.data.status == 'bound'
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.bindCode == resource.data.bindCode
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'ownerUid', 'ownerName', 'updatedAt']);
+    }
+
+    function isOwnerEdit() {
+      return signedIn()
+        && resource.data.status == 'bound'
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.status == 'bound'
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.faction in ['調查員', '異常', '民眾']
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name', 'faction', 'department', 'bio', 'avatarUrl', 'avatarPublicId', 'idCardUrl', 'idCardPublicId', 'updatedAt'
+        ]);
+    }
+
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow create, update: if request.auth != null && request.auth.uid == userId;
+      allow read: if signedIn();
+      allow create, update: if signedIn() && request.auth.uid == userId;
       allow delete: if false;
+    }
+
+    match /characters/{characterId} {
+      allow get, list: if resource.data.status == 'bound' || isStaff();
+      allow create: if isStaff()
+        && request.resource.data.status == 'unassigned'
+        && request.resource.data.ownerUid == null
+        && request.resource.data.uid is string
+        && request.resource.data.bindCode is string
+        && request.resource.data.name is string
+        && request.resource.data.faction in ['調查員', '異常', '民眾'];
+      allow update: if isStaff() || isBind() || isOwnerEdit();
+      allow delete: if isStaff();
+    }
+
+    match /binds/{code} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if isStaff()
+        && request.resource.data.characterId is string
+        && request.resource.data.faction in ['調查員', '異常', '民眾'];
+      allow delete: if isStaff();
+      allow update: if false;
     }
   }
 }

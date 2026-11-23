@@ -15,6 +15,12 @@ const LINKS = [
   { href: "#protocol", label: "05 協議聲明" },
 ]
 
+const DOMAIN_LINKS = [
+  { href: "#intranet", page: "intranet", label: "內部網域" },
+  { href: "#staff", page: "staff", label: "人員配置" },
+  { href: "#staff-admin", page: "staff-admin", label: "人員配置(管理)", staffOnly: true },
+]
+
 function IdentityMark({ src, name }) {
   const [failed, setFailed] = useState(false)
   const letter = (name || "?").trim().slice(0, 1) || "?"
@@ -42,6 +48,7 @@ export default function TopBar({
   profile,
   authReady,
   clearance,
+  staff,
   onLogin,
   onLogout,
   onEditProfile,
@@ -284,14 +291,17 @@ export default function TopBar({
         <p className="mt-8 border-t border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment">
           INTERNAL DOMAIN
         </p>
-        <a
-          href="#intranet"
-          tabIndex={open ? 0 : -1}
-          onClick={() => setOpen(false)}
-          className={`block border-y border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors hover:bg-white/5 hover:text-ink ${page === "intranet" ? "text-ink" : "text-ash"}`}
-        >
-          內部網域
-        </a>
+        {DOMAIN_LINKS.filter((link) => !link.staffOnly || staff).map((link) => (
+          <a
+            key={link.href}
+            href={link.href}
+            tabIndex={open ? 0 : -1}
+            onClick={() => setOpen(false)}
+            className={`block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}
+          >
+            {link.label}
+          </a>
+        ))}
       </nav>
     </>
   )
