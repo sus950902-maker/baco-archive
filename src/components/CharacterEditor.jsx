@@ -143,10 +143,7 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
             </span>
           )}
           <span>
-            <span className="flex items-center gap-2">
-              <span className="shrink-0 text-base font-medium">{fileNo || "—"}</span>
-              <span className="text-base font-medium">{name.trim() || "未命名"}</span>
-            </span>
+            <span className="block text-base font-medium">{fileNo ? `${fileNo} ${name.trim() || "未命名"}` : name.trim() || "未命名"}</span>
             <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[faction] || "#5c5854" }}>
               {faction}
             </span>

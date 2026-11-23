@@ -133,7 +133,8 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
       {error && <p className="mt-2 font-mono text-[11px] text-alert">{error}</p>}
       <div>
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
-        <div className="-mx-5 mt-2 flex justify-center overflow-visible px-5 pt-16 sm:-mx-6 sm:px-6">
+        <div className="relative -mx-5 mt-2 w-[calc(100%+2.5rem)] overflow-visible sm:-mx-6 sm:w-[calc(100%+3rem)]">
+          <div className="flex justify-center pt-16">
           <div className="w-full sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)]">
             <div className="panel hud-corner relative overflow-visible">
               <div ref={copyRef} className="flex w-max max-w-full items-end gap-4 p-4">
@@ -141,7 +142,7 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
               </div>
               <div
                 ref={frameRef}
-                className={`portrait-frame absolute top-0 right-0 bottom-0 border-l border-black/45 ${preview ? "cursor-grab touch-none" : ""}`}
+                className={`portrait-frame absolute top-0 right-0 bottom-0 shadow-[inset_1px_0_0_rgba(0,0,0,0.45)] ${preview ? "cursor-grab touch-none" : ""}`}
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={() => {
