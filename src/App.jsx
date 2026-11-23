@@ -309,10 +309,23 @@ export default function App() {
             setProfile(record)
             setProfileOpen(false)
           }}
+          onOpenCharacter={(character) => {
+            setProfileOpen(false)
+            setOpenCharacter(character)
+          }}
         />
       )}
 
-      {viewedProfile && <IdentityCard profile={viewedProfile} onClose={() => setViewedProfile(null)} />}
+      {viewedProfile && (
+        <IdentityCard
+          profile={viewedProfile}
+          onClose={() => setViewedProfile(null)}
+          onOpenCharacter={(character) => {
+            setViewedProfile(null)
+            setOpenCharacter(character)
+          }}
+        />
+      )}
 
       {openCharacter && (
         <CharacterModal

@@ -81,7 +81,7 @@ function deleteOldAvatar(publicId) {
   }).catch(() => {})
 }
 
-export default function ProfileModal({ user, profile, onClose, onSaved }) {
+export default function ProfileModal({ user, profile, onClose, onSaved, onOpenCharacter }) {
   const savedAvatar = profile?.avatarUrl || user.photoURL || ""
   const [displayName, setDisplayName] = useState(profile?.displayName || user.displayName || "")
   const [preview, setPreview] = useState(savedAvatar)
@@ -405,11 +405,16 @@ export default function ProfileModal({ user, profile, onClose, onSaved }) {
       {cardOpen && (
         <IdentityCard
           profile={{
+            id: user.uid,
             displayName: displayName.trim() || "未命名",
             publicUid: profile?.publicUid || "",
             avatarUrl: preview,
           }}
           onClose={() => setCardOpen(false)}
+          onOpenCharacter={(character) => {
+            setCardOpen(false)
+            onOpenCharacter?.(character)
+          }}
         />
       )}
     </div>

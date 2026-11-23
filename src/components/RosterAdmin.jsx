@@ -7,6 +7,7 @@ import { deleteStoredImage, publicIdFromUrl } from "../media"
 export default function RosterAdmin({ staff, ready, onNotice }) {
   const [records, setRecords] = useState([])
   const [faction, setFaction] = useState(FACTIONS[0])
+  const [order, setOrder] = useState("正序")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [pendingDelete, setPendingDelete] = useState("")
@@ -34,7 +35,6 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
           ...publicCharacter(entry.id, entry.data()),
           bindCode: entry.data().bindCode || "",
         }))
-        next.sort((a, b) => Number(a.status === "bound") - Number(b.status === "bound"))
         setRecords(next)
         setError("")
       },
@@ -106,7 +106,21 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     )
   }
 
-  const visible = records.filter((record) => record.faction === faction)
+  const counts = Object.fromEntries(FACTIONS.map((item) => [item, records.filter((record) => record.faction === item).length]))
+  const visible = records.filter((record) => record.faction === faction).sort((left, right) => {
+    const leftNo = Number(left.fileNo)
+    const rightNo = Number(right.fileNo)
+    const leftNumbered = Number.isInteger(leftNo) && leftNo > 0
+    const rightNumbered = Number.isInteger(rightNo) && rightNo > 0
+    let result = 0
+    if (leftNumbered || rightNumbered) {
+      if (!leftNumbered) result = 1
+      else if (!rightNumbered) result = -1
+      else if (leftNo !== rightNo) result = leftNo - rightNo
+    }
+    if (!result) result = (left.createdAt || 0) - (right.createdAt || 0) || (left.id || "").localeCompare(right.id || "")
+    return order === "倒序" ? -result : result
+  })
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
@@ -114,7 +128,29 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">ROSTER ADMIN // BINDING CODES</p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員管理</h2>
       </div>
-      <div className="panel hud-corner p-5 sm:p-6">
+      <div className="panel hud-corner relative p-5 sm:p-6">
+        <aside className="mb-4 flex flex-col items-end gap-3 sm:absolute sm:top-6 sm:right-6 sm:mb-0">
+          <button
+            type="button"
+            aria-label={order === "正序" ? "正序，點擊改為倒序" : "倒序，點擊改為正序"}
+            onClick={() => setOrder((current) => (current === "正序" ? "倒序" : "正序"))}
+            className="border border-black/20 bg-white p-1.5 text-ink hover:border-black"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" className="block">
+              <path d="M4.5 13V5.2L2.6 7.1 1.7 6.2 4.5 3.4 7.3 6.2 6.4 7.1 4.5 5.2V13Z" className={order === "正序" ? "fill-black" : "fill-black/25"} />
+              <path d="M11.5 3v7.8l1.9-1.9.9.9-2.8 2.8-2.8-2.8.9-.9 1.9 1.9V3Z" className={order === "倒序" ? "fill-black" : "fill-black/25"} />
+            </svg>
+          </button>
+          <p className="flex flex-col items-end gap-1 font-mono text-[11px] tracking-[0.14em]">
+            <span className="text-ink">全部 {records.length}</span>
+            {FACTIONS.map((item) => (
+              <span key={item} style={{ color: FACTION_COLOR[item] || "#5c5854" }}>
+                {item} {counts[item]}
+              </span>
+            ))}
+          </p>
+        </aside>
+        <div className="sm:min-h-40 sm:pr-28">
         <p className="font-mono text-[11px] tracking-[0.16em] text-ash">生成時先指定陣營，一碼只對應一張角色卡</p>
         <div className="mt-3 flex flex-wrap gap-2">
           {FACTIONS.map((item) => (
@@ -150,10 +186,11 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
           [ 生成綁定碼 ]
         </button>
         {error && <p className="mt-4 font-mono text-[11px] text-alert">{error}</p>}
+        </div>
         {visible.length === 0 ? (
           <p className="mt-6 font-mono text-xs text-ash">尚無綁定碼</p>
         ) : (
-          <ul className="mt-6 divide-y divide-black/10 overflow-x-auto">
+          <ul className="mt-4 divide-y divide-black/10 overflow-x-auto">
             {visible.map((record) => (
               <li key={record.id} className="grid min-w-[44rem] grid-cols-[9rem_5rem_3.5rem_4.5rem_minmax(8rem,1fr)_auto] items-center gap-x-4 py-3">
                 <span className="font-mono text-sm tracking-[0.16em]">{record.bindCode || "——"}</span>
