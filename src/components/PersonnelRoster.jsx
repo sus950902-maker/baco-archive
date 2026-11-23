@@ -35,9 +35,9 @@ function shuffle(list) {
   return next
 }
 
-export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdit }) {
+export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdit, initialFilter = "全部" }) {
   const [records, setRecords] = useState([])
-  const [filter, setFilter] = useState("全部")
+  const [filter, setFilter] = useState(initialFilter)
   const [code, setCode] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")

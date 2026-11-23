@@ -44,6 +44,7 @@ export default function App() {
   const [clearance, setClearance] = useState(null)
   const [openCharacter, setOpenCharacter] = useState(null)
   const [editingCharacter, setEditingCharacter] = useState(null)
+  const [staffEntry, setStaffEntry] = useState({ filter: "全部", token: 0 })
 
   const finishBoot = useCallback(() => setBooted(true), [])
   useScrollReveal(booted)
@@ -57,6 +58,11 @@ export default function App() {
     window.addEventListener("hashchange", onHash)
     return () => window.removeEventListener("hashchange", onHash)
   }, [])
+
+  useEffect(() => {
+    if (page !== "staff" || staffEntry.filter === "全部") return
+    setStaffEntry((current) => ({ ...current, filter: "全部" }))
+  }, [page, staffEntry.filter])
 
   useEffect(() => {
     if (page !== "archive") {
@@ -257,6 +263,8 @@ export default function App() {
             <Intranet />
           ) : page === "staff" ? (
             <PersonnelRoster
+              key={staffEntry.token}
+              initialFilter={staffEntry.filter}
               user={user}
               profile={profile}
               onNotice={pushNotice}
@@ -270,7 +278,11 @@ export default function App() {
               key={editingCharacter.id}
               character={editingCharacter}
               onNotice={pushNotice}
-              onSaved={setEditingCharacter}
+              onSaved={(record) => {
+                setEditingCharacter(record)
+                setStaffEntry((current) => ({ filter: "我的檔案", token: current.token + 1 }))
+                if (window.location.hash !== "#staff") window.location.hash = "#staff"
+              }}
             />
           ) : page === "card" ? (
             <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">

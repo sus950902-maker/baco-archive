@@ -128,9 +128,6 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
         <ImageField ref={avatarRef} label="兩吋照片" kind="avatar" existingUrl={character.avatarUrl} disabled={busy} />
         {status && <p className="font-mono text-[11px] text-signal">{status}</p>}
         {error && <p className="font-mono text-[11px] text-alert">{error}</p>}
-        <button type="submit" disabled={busy} className="w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">
-          [ 寫入角色卡 ]
-        </button>
         <PortraitField
           ref={portraitRef}
           existingUrl={character.portraitUrl}
@@ -157,6 +154,9 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
             <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {character.uid}</span>
           </span>
         </PortraitField>
+        <button type="submit" disabled={busy} className="mx-auto w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">
+          [ 儲存檔案 ]
+        </button>
       </form>
     </section>
   )
