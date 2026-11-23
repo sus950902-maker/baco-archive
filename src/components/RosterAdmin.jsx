@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { collection, onSnapshot } from "firebase/firestore"
-import { assignFileNumbers, characterTitle, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
+import { assignFileNumbers, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl } from "../media"
 
@@ -104,6 +104,8 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     )
   }
 
+  const visible = records.filter((record) => record.faction === faction)
+
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
@@ -146,22 +148,22 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
           [ 生成綁定碼 ]
         </button>
         {error && <p className="mt-4 font-mono text-[11px] text-alert">{error}</p>}
-        {records.length === 0 ? (
+        {visible.length === 0 ? (
           <p className="mt-6 font-mono text-xs text-ash">尚無綁定碼</p>
         ) : (
-          <ul className="mt-6 divide-y divide-black/10">
-            {records.map((record) => (
-              <li key={record.id} className="flex flex-wrap items-center gap-3 py-3">
+          <ul className="mt-6 divide-y divide-black/10 overflow-x-auto">
+            {visible.map((record) => (
+              <li key={record.id} className="grid min-w-[44rem] grid-cols-[9rem_5rem_3.5rem_4.5rem_minmax(8rem,1fr)_auto] items-center gap-x-4 py-3">
                 <span className="font-mono text-sm tracking-[0.16em]">{record.bindCode || "——"}</span>
                 <span className="font-mono text-[11px] tracking-[0.14em]" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
                   {record.faction}
-                  {record.fileNo ? ` ${record.fileNo}` : ""}
                 </span>
+                <span className="font-mono text-[11px] tracking-[0.14em] text-ash">{record.fileNo || ""}</span>
                 <span className={`font-mono text-[11px] tracking-[0.14em] ${record.status === "bound" ? "text-signal" : "text-ash"}`}>
                   {record.status === "bound" ? "已綁定" : "未綁定"}
                 </span>
-                {record.name && record.name !== "未命名" && <span className="text-sm text-ash">{characterTitle(record)}</span>}
-                <span className="ml-auto flex gap-2">
+                <span className="truncate text-sm text-ash">{record.name && record.name !== "未命名" ? record.name : ""}</span>
+                <span className="flex gap-2">
                   {record.bindCode && (
                     <button type="button" onClick={() => copyCode(record.bindCode)} className="border border-black/20 px-2 py-1.5 font-mono text-[11px] text-ink hover:border-alert hover:text-alert">
                       [ 複製 ]
