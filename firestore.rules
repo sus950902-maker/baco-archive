@@ -1,65 +1,74 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
     function signedIn() {
       return request.auth != null;
     }
 
-    function isStaff() {
+    function hasMidClearance() {
       return signedIn()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['moderator', 'admin'];
     }
 
-    function isBind() {
-      return signedIn()
-        && resource.data.status == 'unassigned'
-        && request.resource.data.status == 'bound'
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.bindCode == resource.data.bindCode
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'ownerUid', 'ownerName', 'updatedAt']);
-    }
-
-    function isOwnerEdit() {
-      return signedIn()
-        && resource.data.status == 'bound'
-        && resource.data.ownerUid == request.auth.uid
-        && request.resource.data.status == 'bound'
-        && request.resource.data.ownerUid == request.auth.uid
-        && request.resource.data.faction in ['調查員', '異常', '民眾']
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'name', 'faction', 'department', 'bio', 'avatarUrl', 'avatarPublicId', 'idCardUrl', 'idCardPublicId', 'updatedAt'
-        ]);
+    function keepsRole() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
+        || request.resource.data.role == resource.data.get('role', 'user');
     }
 
     match /users/{userId} {
-      allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == userId;
+      allow read: if true;
+      allow create: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role in ['user', 'moderator', 'admin'];
+      allow update: if signedIn() && request.auth.uid == userId
+        && request.resource.data.role in ['user', 'moderator', 'admin']
+        && (keepsRole() || hasMidClearance() || resource.data.get('role', 'user') == 'user');
       allow delete: if false;
     }
 
-    match /characters/{characterId} {
-      allow get, list: if resource.data.status == 'bound' || isStaff();
-      allow create: if isStaff()
+    match /characters/{charId} {
+      allow read: if true;
+      allow create: if hasMidClearance()
         && request.resource.data.status == 'unassigned'
         && request.resource.data.ownerUid == null
         && request.resource.data.uid is string
         && request.resource.data.bindCode is string
         && request.resource.data.name is string
         && request.resource.data.faction in ['調查員', '異常', '民眾'];
-      allow update: if isStaff() || isBind() || isOwnerEdit();
-      allow delete: if isStaff();
+      allow update: if hasMidClearance()
+        || (signedIn()
+            && resource.data.status == 'unassigned'
+            && request.resource.data.status == 'bound'
+            && request.resource.data.ownerUid == request.auth.uid
+            && request.resource.data.bindCode == resource.data.bindCode
+            && request.resource.data.uid == resource.data.uid)
+        || (signedIn()
+            && resource.data.status == 'bound'
+            && resource.data.ownerUid == request.auth.uid
+            && request.resource.data.ownerUid == resource.data.ownerUid
+            && request.resource.data.bindCode == resource.data.bindCode
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.faction == resource.data.faction);
+      allow delete: if hasMidClearance();
     }
 
     match /binds/{code} {
       allow get: if signedIn();
       allow list: if false;
-      allow create: if isStaff()
+      allow create: if hasMidClearance()
         && request.resource.data.characterId is string
         && request.resource.data.faction in ['調查員', '異常', '民眾'];
-      allow delete: if isStaff();
+      allow delete: if hasMidClearance();
       allow update: if false;
+    }
+
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
+      allow update: if signedIn() && resource.data.uid == request.auth.uid
+        && request.resource.data.uid == resource.data.uid;
     }
   }
 }
