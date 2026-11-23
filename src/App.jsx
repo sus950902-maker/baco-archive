@@ -287,7 +287,7 @@ export default function App() {
           ) : page === "card" ? (
             <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
               <h2 className="text-2xl font-medium sm:text-3xl">編輯角色卡</h2>
-              <p className="mt-4 font-mono text-xs tracking-wide text-ash">請先在人員配置輸入綁定碼。</p>
+              <p className="mt-4 font-mono text-xs tracking-wide text-ash">請先在檔案庫輸入綁定碼。</p>
             </section>
           ) : (
             <>

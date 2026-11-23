@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
-import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR } from "../characters"
+import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionLabel } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl, uploadImage } from "../media"
 import ImageField from "./ImageField"
@@ -143,9 +143,9 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
             </span>
           )}
           <span>
-            <span className="block text-base font-medium">{fileNo ? `${fileNo} ${name.trim() || "未命名"}` : name.trim() || "未命名"}</span>
+            <span className="block text-base font-medium">{name.trim() || "未命名"}</span>
             <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[faction] || "#5c5854" }}>
-              {faction}
+              {factionLabel({ faction, fileNo })}
             </span>
             <span className="mt-1 block font-mono text-[11px] text-ash">{department}</span>
             <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {character.uid}</span>

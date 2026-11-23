@@ -218,8 +218,13 @@ export async function removeCharacter(character) {
 }
 
 export function characterTitle(record) {
-  const name = record?.name || "未命名"
-  return record?.fileNo ? `${record.fileNo} ${name}` : name
+  return record?.name || "未命名"
+}
+
+export function factionLabel(record) {
+  const faction = record?.faction || ""
+  if ((faction === "調查員" || faction === "異常") && record?.fileNo) return `${faction} ${record.fileNo}`
+  return faction
 }
 
 export function publicCharacter(id, data) {

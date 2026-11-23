@@ -17,7 +17,7 @@ const LINKS = [
 
 const DOMAIN_LINKS = [
   { href: "#intranet", page: "intranet", label: "內部網域" },
-  { href: "#staff", page: "staff", label: "人員配置" },
+  { href: "#staff", page: "staff", label: "檔案庫" },
   { href: "#staff-admin", page: "staff-admin", label: "人員管理", staffOnly: true, tone: "signal" },
 ]
 

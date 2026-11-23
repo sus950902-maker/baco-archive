@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { collection, onSnapshot, query, where } from "firebase/firestore"
-import { characterTitle, claimCharacter, FACTION_COLOR, publicCharacter } from "../characters"
+import { characterTitle, claimCharacter, FACTION_COLOR, factionLabel, publicCharacter } from "../characters"
 import PortraitArt from "./PortraitArt"
 import { db } from "../firebase"
 
@@ -53,7 +53,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         setLoadError("")
         setRecords(snap.docs.map((entry) => publicCharacter(entry.id, entry.data())))
       },
-      () => setLoadError("公開名冊讀取失敗"),
+      () => setLoadError("內部名冊讀取失敗"),
     )
   }, [])
 
@@ -103,12 +103,12 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
   return (
     <section className="roster-section mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
-        <p className="font-mono text-[11px] tracking-[0.22em] text-comment">PERSONNEL ROSTER // 公開名冊</p>
-        <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員配置</h2>
+        <p className="font-mono text-[11px] tracking-[0.22em] text-comment">PERSONNEL ROSTER // 內部名冊</p>
+        <h2 className="mt-2 text-2xl font-medium sm:text-3xl">檔案庫</h2>
       </div>
 
       <form onSubmit={claim} className="panel hud-corner p-5 sm:p-6">
-        <p className="font-mono text-[11px] tracking-[0.18em] text-ash">輸入角色綁定碼（BINDING CODE）設定檔案</p>
+        <p className="font-mono text-[11px] tracking-[0.18em] text-ash">輸入綁定碼（BINDING CODE）設定檔案</p>
         <div className="mt-3 flex flex-col gap-3 sm:flex-row">
           <input
             value={code}
@@ -154,7 +154,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           {filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
         </p>
       ) : (
-        <ul className="roster-grid mt-6 grid gap-4 pt-10 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="roster-grid mt-6 grid gap-x-4 gap-y-10 pt-10 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
               <button type="button" onClick={() => onOpen(record)} className="panel hud-corner relative w-full overflow-visible p-0 text-left hover:border-black">
@@ -169,7 +169,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                   <span>
                     <span className="block text-base font-medium">{characterTitle(record)}</span>
                     <span className="mt-1 block font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
-                      {record.faction}
+                      {factionLabel(record)}
                     </span>
                     <span className="mt-1 block font-mono text-[11px] text-ash">{record.department}</span>
                     <span className="mt-2 block font-mono text-[10px] tracking-[0.14em] text-ash">UID // {record.uid}</span>
