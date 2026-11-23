@@ -112,7 +112,7 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
           <input
             type="range"
             min="1"
-            max="3"
+            max="6"
             step="0.01"
             value={zoom}
             disabled={disabled}
@@ -131,9 +131,9 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
       )}
       <p className="mt-2 font-mono text-[10px] tracking-wide text-ash">可放大並拖曳。超出框線的部分會被裁切，上緣仍可略為超出。</p>
       {error && <p className="mt-2 font-mono text-[11px] text-alert">{error}</p>}
-      <div className="pt-8">
+      <div>
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
-        <div className="roster-grid -mx-5 mt-2 flex justify-center sm:-mx-6">
+        <div className="-mx-5 mt-2 flex justify-center overflow-visible px-5 pt-16 sm:-mx-6 sm:px-6">
           <div className="w-full sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)]">
             <div className="panel hud-corner relative overflow-visible">
               <div ref={copyRef} className="flex w-max max-w-full items-end gap-4 p-4">
