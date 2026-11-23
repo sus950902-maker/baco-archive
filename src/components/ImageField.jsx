@@ -1,16 +1,18 @@
 import { forwardRef, useImperativeHandle, useRef, useState } from "react"
 import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES, compressAvatar, compressCard } from "../media"
 
-const FRAME = 180
-const OUTPUT = 512
+const FRAME_W = 140
+const FRAME_H = 180
+const OUTPUT_W = 413
+const OUTPUT_H = 531
 
 function place(natural, zoom, offsetX, offsetY) {
   if (!natural.width || !natural.height) return { width: 0, height: 0, x: 0, y: 0 }
-  const cover = Math.max(FRAME / natural.width, FRAME / natural.height)
+  const cover = Math.max(FRAME_W / natural.width, FRAME_H / natural.height)
   const width = natural.width * cover * zoom
   const height = natural.height * cover * zoom
-  const maxX = Math.max(0, (width - FRAME) / 2)
-  const maxY = Math.max(0, (height - FRAME) / 2)
+  const maxX = Math.max(0, (width - FRAME_W) / 2)
+  const maxY = Math.max(0, (height - FRAME_H) / 2)
   return {
     width,
     height,
@@ -37,14 +39,14 @@ const ImageField = forwardRef(function ImageField({ label, kind, existingUrl = "
       if (kind === "avatar") {
         if (!natural.width) throw new Error("頭像尚未載入")
         const canvas = document.createElement("canvas")
-        canvas.width = OUTPUT
-        canvas.height = OUTPUT
+        canvas.width = OUTPUT_W
+        canvas.height = OUTPUT_H
         const context = canvas.getContext("2d")
-        const scale = OUTPUT / FRAME
+        const scale = OUTPUT_W / FRAME_W
         context.drawImage(
           imageRef.current,
-          framed.x * scale + (OUTPUT - framed.width * scale) / 2,
-          framed.y * scale + (OUTPUT - framed.height * scale) / 2,
+          framed.x * scale + (OUTPUT_W - framed.width * scale) / 2,
+          framed.y * scale + (OUTPUT_H - framed.height * scale) / 2,
           framed.width * scale,
           framed.height * scale,
         )
@@ -99,7 +101,7 @@ const ImageField = forwardRef(function ImageField({ label, kind, existingUrl = "
       <p className="font-mono text-[11px] tracking-[0.16em] text-ash">{label}</p>
       <div className="mt-2 flex flex-wrap items-end gap-3">
         <div
-          className={`relative shrink-0 overflow-hidden border bg-white ${tone === "terminal" ? "border-white/20" : "border-black/15"} ${kind === "avatar" ? "h-[180px] w-[180px]" : "h-[120px] w-[180px]"} ${cropping ? "cursor-grab touch-none" : ""}`}
+          className={`relative shrink-0 overflow-hidden border bg-white ${tone === "terminal" ? "border-white/20" : "border-black/15"} ${kind === "avatar" ? "h-[180px] w-[140px]" : "h-[120px] w-[180px]"} ${cropping ? "cursor-grab touch-none" : ""}`}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={() => {

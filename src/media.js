@@ -38,7 +38,7 @@ async function compress(file, options) {
 }
 
 export function compressAvatar(file) {
-  return compress(file, { maxSizeMB: 80 / 1024, maxWidthOrHeight: 400, initialQuality: 0.8 })
+  return compress(file, { maxSizeMB: 80 / 1024, maxWidthOrHeight: 531, initialQuality: 0.8 })
 }
 
 export function compressCard(file) {

@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { FACTION_COLOR } from "../characters"
+import { characterTitle, FACTION_COLOR } from "../characters"
 
 export default function CharacterModal({ character, user, staff, onClose, onEdit }) {
   const canEdit = Boolean(onEdit) && Boolean(user) && (staff || character.ownerUid === user?.uid)
@@ -27,31 +27,21 @@ export default function CharacterModal({ character, user, staff, onClose, onEdit
           CHARACTER FILE // {character.uid}
         </p>
         <h2 id="character-title" className="mt-2 text-xl font-medium text-ink">
-          {character.name || "未命名"}
+          {characterTitle(character)}
         </h2>
         <p className="mt-2 font-mono text-[11px] tracking-[0.14em] text-ash">
           {character.faction} // {character.department || "無 / 民間"}
         </p>
         {character.ownerName && <p className="mt-1 font-mono text-[11px] text-ash">持有者 // {character.ownerName}</p>}
         {character.bio && <p className="mt-4 text-sm leading-7 text-ink">{character.bio}</p>}
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <figure>
-            <figcaption className="font-mono text-[10px] tracking-[0.16em] text-ash">AVATAR</figcaption>
-            {character.avatarUrl ? (
-              <img src={character.avatarUrl} alt="" className="mt-2 h-40 w-40 border border-white/15 object-cover" />
-            ) : (
-              <p className="mt-2 font-mono text-xs text-ash">NO IMAGE</p>
-            )}
-          </figure>
-          <figure>
-            <figcaption className="font-mono text-[10px] tracking-[0.16em] text-ash">ID CARD // 角色識別證</figcaption>
-            {character.idCardUrl ? (
-              <img src={character.idCardUrl} alt={`${character.name} 識別證`} className="mt-2 max-h-80 w-full border border-white/15 object-contain" />
-            ) : (
-              <p className="mt-2 font-mono text-xs text-ash">NO IMAGE</p>
-            )}
-          </figure>
-        </div>
+        <figure className="mt-5">
+          <figcaption className="font-mono text-[10px] tracking-[0.16em] text-ash">兩吋照片</figcaption>
+          {character.avatarUrl ? (
+            <img src={character.avatarUrl} alt="" className="mt-2 aspect-[7/9] w-36 border border-white/15 object-cover" />
+          ) : (
+            <p className="mt-2 font-mono text-xs text-ash">NO IMAGE</p>
+          )}
+        </figure>
         <div className="mt-6 flex flex-wrap gap-3">
           {canEdit && (
             <button
@@ -59,7 +49,7 @@ export default function CharacterModal({ character, user, staff, onClose, onEdit
               onClick={() => onEdit(character)}
               className="border border-alert px-3 py-2 font-mono text-xs tracking-wide text-alert hover:bg-alert hover:text-white"
             >
-              [ 編輯角色檔案 / 更換頭像與識別證 ]
+              [ 編輯角色檔案 / 更換兩吋照片 ]
             </button>
           )}
           <button type="button" onClick={onClose} className="border border-white/15 px-3 py-2 font-mono text-xs tracking-wide text-ash hover:text-ink">

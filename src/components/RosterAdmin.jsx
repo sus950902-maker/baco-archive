@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { collection, onSnapshot } from "firebase/firestore"
-import { FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
+import { assignFileNumbers, characterTitle, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl } from "../media"
 
@@ -10,12 +10,20 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [pendingDelete, setPendingDelete] = useState("")
+  const [councilCode, setCouncilCode] = useState("")
 
   useEffect(() => {
     if (!ready || staff) return undefined
     onNotice({ code: "CLEARANCE // DENIED", message: "權限不足。本區僅限中級以上管理權限調閱。" })
     return undefined
   }, [ready, staff, onNotice])
+
+  useEffect(() => {
+    if (!staff) return undefined
+    assignFileNumbers("調查員").catch(() => {})
+    assignFileNumbers("異常").catch(() => {})
+    return undefined
+  }, [staff])
 
   useEffect(() => {
     if (!staff) return undefined
@@ -38,8 +46,12 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     setBusy(true)
     setError("")
     try {
-      const created = await issueBindCode(faction)
-      onNotice({ code: "ROSTER // ISSUED", message: `綁定碼 ${created.bindCode} 已生成 // ${faction}` })
+      const created = await issueBindCode(faction, councilCode)
+      if (faction === "議會") setCouncilCode("")
+      onNotice({
+        code: "ROSTER // ISSUED",
+        message: faction === "議會" ? `綁定碼 ${created.bindCode} 已生成 // 議會 ${created.fileNo}` : `綁定碼 ${created.bindCode} 已生成 // ${faction} ${created.fileNo}`,
+      })
     } catch (createError) {
       setError(createError.message || "綁定碼生成失敗")
     } finally {
@@ -62,7 +74,7 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
       deleteStoredImage(record.avatarPublicId || publicIdFromUrl(record.avatarUrl))
       deleteStoredImage(record.idCardPublicId || publicIdFromUrl(record.idCardUrl))
       setPendingDelete("")
-      onNotice({ code: "ROSTER // DELETED", message: `${record.bindCode} 已刪除。` })
+      onNotice({ code: "ROSTER // DELETED", message: `${record.bindCode} 與角色檔案已刪除。` })
     } catch (deleteError) {
       onNotice({ code: "ROSTER // DENIED", message: deleteError.message || "刪除失敗" })
     }
@@ -112,9 +124,21 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
             </button>
           ))}
         </div>
+        {faction === "議會" && (
+          <label className="mt-4 block font-mono text-[11px] tracking-[0.16em] text-ash">
+            特殊代號
+            <input
+              value={councilCode}
+              disabled={busy}
+              maxLength={16}
+              onChange={(event) => setCouncilCode(event.target.value)}
+              className="mt-2 w-full border border-black/20 bg-white px-3 py-2 font-mono text-sm tracking-[0.12em] text-black outline-none focus:border-alert"
+            />
+          </label>
+        )}
         <button
           type="button"
-          disabled={busy}
+          disabled={busy || (faction === "議會" && !councilCode.trim())}
           onClick={generate}
           className="mt-4 border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40"
         >
@@ -130,27 +154,27 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
                 <span className="font-mono text-sm tracking-[0.16em]">{record.bindCode || "——"}</span>
                 <span className="font-mono text-[11px] tracking-[0.14em]" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
                   {record.faction}
+                  {record.fileNo ? ` ${record.fileNo}` : ""}
                 </span>
                 <span className={`font-mono text-[11px] tracking-[0.14em] ${record.status === "bound" ? "text-signal" : "text-ash"}`}>
                   {record.status === "bound" ? "已綁定" : "未綁定"}
                 </span>
-                {record.name && record.name !== "未命名" && <span className="text-sm text-ash">{record.name}</span>}
+                {record.name && record.name !== "未命名" && <span className="text-sm text-ash">{characterTitle(record)}</span>}
                 <span className="ml-auto flex gap-2">
                   {record.bindCode && (
                     <button type="button" onClick={() => copyCode(record.bindCode)} className="border border-black/20 px-2 py-1.5 font-mono text-[11px] text-ink hover:border-alert hover:text-alert">
                       [ 複製 ]
                     </button>
                   )}
-                  {record.status !== "bound" &&
-                    (pendingDelete === record.id ? (
-                      <button type="button" onClick={() => destroy(record)} className="border border-alert px-2 py-1.5 font-mono text-[11px] text-alert">
-                        [ 確認刪除 ]
-                      </button>
-                    ) : (
-                      <button type="button" onClick={() => setPendingDelete(record.id)} className="border border-black/20 px-2 py-1.5 font-mono text-[11px] text-ash hover:text-alert">
-                        [ 刪除 ]
-                      </button>
-                    ))}
+                  {pendingDelete === record.id ? (
+                    <button type="button" onClick={() => destroy(record)} className="border border-alert px-2 py-1.5 font-mono text-[11px] text-alert">
+                      [ 確認刪除 ]
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => setPendingDelete(record.id)} className="border border-black/20 px-2 py-1.5 font-mono text-[11px] text-ash hover:text-alert">
+                      [ 刪除 ]
+                    </button>
+                  )}
                 </span>
               </li>
             ))}

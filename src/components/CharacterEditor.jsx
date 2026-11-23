@@ -1,6 +1,6 @@
-import { useRef, useState } from "react"
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore"
-import { DEPARTMENTS, FACTION_COLOR } from "../characters"
+import { useEffect, useRef, useState } from "react"
+import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
+import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl, uploadImage } from "../media"
 import ImageField from "./ImageField"
@@ -15,8 +15,15 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
   const [busy, setBusy] = useState(false)
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
+  const [fileNo, setFileNo] = useState(character.fileNo || "")
   const avatarRef = useRef(null)
-  const cardRef = useRef(null)
+
+  useEffect(() => {
+    if (faction === "調查員" || faction === "異常") assignFileNumbers(faction).catch(() => {})
+    return onSnapshot(doc(db, "characters", character.id), (snap) => {
+      setFileNo(snap.exists() ? snap.data().fileNo || "" : "")
+    })
+  }, [character.id, faction])
 
   async function save(event) {
     event.preventDefault()
@@ -30,7 +37,6 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
     try {
       setStatus("影像壓縮中")
       const avatarFile = await avatarRef.current?.prepare()
-      const cardFile = await cardRef.current?.prepare()
       const patch = {
         name: nextName,
         department,
@@ -43,23 +49,14 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
         patch.avatarUrl = uploaded.secure_url
         patch.avatarPublicId = uploaded.public_id
       }
-      if (cardFile) {
-        setStatus("識別證上傳中")
-        const uploaded = await uploadImage(cardFile)
-        patch.idCardUrl = uploaded.secure_url
-        patch.idCardPublicId = uploaded.public_id
-      }
       setStatus("檔案寫入中")
       await updateDoc(doc(db, "characters", character.id), patch)
       if (avatarFile) deleteStoredImage(character.avatarPublicId || publicIdFromUrl(character.avatarUrl))
-      if (cardFile) deleteStoredImage(character.idCardPublicId || publicIdFromUrl(character.idCardUrl))
       onSaved({
         ...character,
         ...patch,
         avatarUrl: patch.avatarUrl || character.avatarUrl,
         avatarPublicId: patch.avatarPublicId || character.avatarPublicId,
-        idCardUrl: patch.idCardUrl || character.idCardUrl,
-        idCardPublicId: patch.idCardPublicId || character.idCardPublicId,
         updatedAt: Date.now(),
       })
       setStatus("")
@@ -89,6 +86,10 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
           陣營 // <span style={{ color: FACTION_COLOR[faction] || "#1a1a1a" }}>{faction}</span>
         </p>
         <label className="font-mono text-[11px] tracking-[0.16em] text-ash">
+          {faction === "議會" ? "代號" : "編號"}
+          <input value={fileNo || "—"} readOnly disabled className={`${fieldClass} cursor-default disabled:opacity-100`} />
+        </label>
+        <label className="font-mono text-[11px] tracking-[0.16em] text-ash">
           所屬部門
           <select value={department} disabled={busy} onChange={(event) => setDepartment(event.target.value)} className={fieldClass}>
             {DEPARTMENTS.map((item) => (
@@ -100,11 +101,7 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
           角色簡介
           <textarea value={bio} maxLength={600} disabled={busy} onChange={(event) => setBio(event.target.value)} className={`${fieldClass} min-h-24`} />
         </label>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <ImageField ref={avatarRef} label="角色頭像" kind="avatar" existingUrl={character.avatarUrl} disabled={busy} />
-          <ImageField ref={cardRef} label="角色識別證" kind="card" existingUrl={character.idCardUrl} disabled={busy} />
-        </div>
-        <p className="font-mono text-[10px] tracking-wide text-ash">頭像會先壓縮，上傳成功後以新圖取代舊圖。</p>
+        <ImageField ref={avatarRef} label="兩吋照片" kind="avatar" existingUrl={character.avatarUrl} disabled={busy} />
         {status && <p className="font-mono text-[11px] text-signal">{status}</p>}
         {error && <p className="font-mono text-[11px] text-alert">{error}</p>}
         <button type="submit" disabled={busy} className="w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">

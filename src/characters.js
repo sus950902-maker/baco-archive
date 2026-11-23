@@ -14,12 +14,13 @@ import { db } from "./firebase"
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 
-export const FACTIONS = ["調查員", "異常", "民眾"]
+export const FACTIONS = ["調查員", "異常", "民眾", "議會"]
 
 export const FACTION_COLOR = {
   調查員: "#10b981",
   異常: "#f59e0b",
   民眾: "#38bdf8",
+  議會: "#dc2626",
 }
 
 export const DEPARTMENTS = [
@@ -53,6 +54,58 @@ export function normalizeBindCode(value) {
   return `${raw.slice(0, 4)}-${raw.slice(4)}`
 }
 
+const NUMBERED_FACTIONS = ["調查員", "異常"]
+
+function padFileNo(value) {
+  return String(value).padStart(3, "0")
+}
+
+async function factionRows(faction) {
+  const snap = await getDocs(query(collection(db, "characters"), where("faction", "==", faction)))
+  return snap.docs
+}
+
+export async function assignFileNumbers(faction) {
+  if (!NUMBERED_FACTIONS.includes(faction)) return
+  const rows = await factionRows(faction)
+  let max = 0
+  const pending = []
+  rows.forEach((entry) => {
+    if (entry.data().faction !== faction) return
+    const raw = String(entry.data().fileNo || "")
+    const value = /^\d+$/.test(raw) ? Number(raw) : 0
+    if (value > 0) max = Math.max(max, value)
+    else pending.push(entry)
+  })
+  if (!pending.length) return
+  pending.sort((a, b) => {
+    const left = a.data().createdAt?.toMillis?.() || 0
+    const right = b.data().createdAt?.toMillis?.() || 0
+    if (left !== right) return left - right
+    return a.id.localeCompare(b.id)
+  })
+  const batch = writeBatch(db)
+  pending.forEach((entry) => {
+    max += 1
+    batch.update(entry.ref, { fileNo: padFileNo(max) })
+  })
+  await batch.commit()
+}
+
+async function reserveFileNo(faction) {
+  if (!NUMBERED_FACTIONS.includes(faction)) return ""
+  await assignFileNumbers(faction)
+  const rows = await factionRows(faction)
+  let max = 0
+  rows.forEach((entry) => {
+    if (entry.data().faction !== faction) return
+    const raw = String(entry.data().fileNo || "")
+    const value = /^\d+$/.test(raw) ? Number(raw) : 0
+    if (value > 0) max = Math.max(max, value)
+  })
+  return padFileNo(max + 1)
+}
+
 async function uniqueSerial() {
   for (let attempt = 0; attempt < 6; attempt += 1) {
     const serial = `BACO-${randomChunk(4)}`
@@ -74,10 +127,12 @@ async function uniqueBindCode() {
 export async function createCharacter(input) {
   const serial = await uniqueSerial()
   const bindCode = await uniqueBindCode()
+  const fileNo = input.fileNo || (await reserveFileNo(input.faction))
   const characterRef = doc(collection(db, "characters"))
   const batch = writeBatch(db)
   batch.set(characterRef, {
     uid: serial,
+    fileNo,
     bindCode,
     status: "unassigned",
     ownerUid: null,
@@ -95,16 +150,24 @@ export async function createCharacter(input) {
   })
   batch.set(doc(db, "binds", bindCode), { characterId: characterRef.id, faction: input.faction })
   await batch.commit()
-  return { id: characterRef.id, uid: serial, bindCode }
+  return { id: characterRef.id, uid: serial, fileNo, bindCode }
 }
 
-export async function issueBindCode(faction) {
+export async function issueBindCode(faction, councilCode = "") {
   if (!FACTIONS.includes(faction)) throw new Error("請先選擇陣營")
+  let fileNo = ""
+  if (faction === "議會") {
+    fileNo = String(councilCode || "").trim()
+    if (!fileNo) throw new Error("請填寫議會代號")
+    const rows = await factionRows("議會")
+    if (rows.some((entry) => entry.data().fileNo === fileNo)) throw new Error("此代號已被使用")
+  }
   return createCharacter({
     name: "",
     faction,
     department: DEPARTMENTS[4],
     bio: "",
+    fileNo,
   })
 }
 
@@ -154,10 +217,16 @@ export async function removeCharacter(character) {
   await batch.commit()
 }
 
+export function characterTitle(record) {
+  const name = record?.name || "未命名"
+  return record?.fileNo ? `${record.fileNo} ${name}` : name
+}
+
 export function publicCharacter(id, data) {
   return {
     id,
     uid: data.uid || "",
+    fileNo: data.fileNo || "",
     status: data.status || "unassigned",
     ownerUid: data.ownerUid || null,
     ownerName: data.ownerName || "",

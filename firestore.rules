@@ -34,21 +34,24 @@ service cloud.firestore {
         && request.resource.data.ownerUid == null
         && request.resource.data.uid is string
         && request.resource.data.bindCode is string
+        && request.resource.data.fileNo is string
         && request.resource.data.name is string
-        && request.resource.data.faction in ['調查員', '異常', '民眾'];
+        && request.resource.data.faction in ['調查員', '異常', '民眾', '議會'];
       allow update: if hasMidClearance()
         || (signedIn()
             && resource.data.status == 'unassigned'
             && request.resource.data.status == 'bound'
             && request.resource.data.ownerUid == request.auth.uid
             && request.resource.data.bindCode == resource.data.bindCode
-            && request.resource.data.uid == resource.data.uid)
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.fileNo == resource.data.fileNo)
         || (signedIn()
             && resource.data.status == 'bound'
             && resource.data.ownerUid == request.auth.uid
             && request.resource.data.ownerUid == resource.data.ownerUid
             && request.resource.data.bindCode == resource.data.bindCode
             && request.resource.data.uid == resource.data.uid
+            && request.resource.data.fileNo == resource.data.fileNo
             && request.resource.data.faction == resource.data.faction);
       allow delete: if hasMidClearance();
     }
@@ -58,7 +61,7 @@ service cloud.firestore {
       allow list: if false;
       allow create: if hasMidClearance()
         && request.resource.data.characterId is string
-        && request.resource.data.faction in ['調查員', '異常', '民眾'];
+        && request.resource.data.faction in ['調查員', '異常', '民眾', '議會'];
       allow delete: if hasMidClearance();
       allow update: if false;
     }
