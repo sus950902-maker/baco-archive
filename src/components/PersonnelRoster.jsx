@@ -149,10 +149,10 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           {needle ? "沒有符合的檔案" : filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
         </p>
       ) : (
-        <ul className="roster-grid mt-16 grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="roster-grid mt-16 grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-              <button type="button" onClick={() => onOpen(record)} className={`panel character-card hud-corner relative w-full overflow-visible p-0 text-left hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
+              <button type="button" onClick={() => onOpen(record)} className={`panel character-card hud-corner relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span data-card-copy className="flex w-full min-w-0 items-end gap-4 p-4">
                   {record.avatarUrl ? (
                     <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />

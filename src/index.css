@@ -151,7 +151,7 @@ body {
 
 .roster-grid {
   overflow: clip;
-  overflow-clip-margin: 2.75rem 0.75rem 0.75rem 0;
+  overflow-clip-margin: 2.75rem 1rem 1rem 0.5rem;
 }
 
 :root {
