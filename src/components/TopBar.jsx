@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Search } from "lucide-react"
+import { matchClearance } from "../clearance"
 
 function formatStamp(date) {
   const pad = (value) => String(value).padStart(2, "0")
@@ -35,7 +36,19 @@ function IdentityMark({ src, name }) {
 const actionClass =
   "shrink-0 border border-line bg-panel px-3 py-2 font-mono text-xs tracking-wide whitespace-nowrap text-ink transition-colors hover:border-alert hover:text-alert focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert disabled:opacity-40"
 
-export default function TopBar({ user, profile, authReady, onLogin, onLogout, onEditProfile, onSearch, onViewProfile }) {
+export default function TopBar({
+  page,
+  user,
+  profile,
+  authReady,
+  clearance,
+  onLogin,
+  onLogout,
+  onEditProfile,
+  onSearch,
+  onGrantClearance,
+  onViewProfile,
+}) {
   const headerRef = useRef(null)
   const [stamp, setStamp] = useState(() => formatStamp(new Date()))
   const [open, setOpen] = useState(false)
@@ -77,7 +90,16 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
 
   async function submitSearch(event) {
     event.preventDefault()
-    if (!searchValue.trim() || searching) return
+    const value = searchValue.trim()
+    if (!value || searching) return
+    const level = matchClearance(value)
+    if (level) {
+      onGrantClearance(level)
+      setSearchValue("")
+      setResults([])
+      setSearchOpen(false)
+      return
+    }
     setSearching(true)
     const records = await onSearch(searchValue)
     setSearching(false)
@@ -104,7 +126,13 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
         <div className="flex shrink-0 items-center gap-3 font-mono text-[11px] text-ash">
           <span className="hidden truncate sm:inline">
             <span className="hidden lg:inline">SYSTEM: INTERNAL ARCHIVE // </span>
-            {user ? "CLEARANCE: AUTHORIZED // 已綁定" : "CLEARANCE: GUEST"}
+            {clearance === "high"
+              ? "CLEARANCE: HIGH // 高級管理"
+              : clearance === "mid"
+                ? "CLEARANCE: MID // 中級管理"
+                : user
+                  ? "CLEARANCE: AUTHORIZED // 已綁定"
+                  : "CLEARANCE: GUEST"}
           </span>
           <time dateTime={stamp} className="shrink-0 text-ink">
             {stamp}
@@ -253,6 +281,17 @@ export default function TopBar({ user, profile, authReady, onLogin, onLogout, on
             </li>
           ))}
         </ul>
+        <p className="mt-8 border-t border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment">
+          INTERNAL DOMAIN
+        </p>
+        <a
+          href="#intranet"
+          tabIndex={open ? 0 : -1}
+          onClick={() => setOpen(false)}
+          className={`block border-y border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors hover:bg-white/5 hover:text-ink ${page === "intranet" ? "text-ink" : "text-ash"}`}
+        >
+          內部網域
+        </a>
       </nav>
     </>
   )

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { Crosshair, Eye, Landmark, Users } from "lucide-react"
 
 const FACTIONS = [
@@ -9,7 +9,7 @@ const FACTIONS = [
     glow: "rgba(245, 158, 11, 0.72)",
     name: "異常",
     role: "玩家可參與陣營",
-    body: "潛伏於現實並製造混亂，透過繪製『異常事件』展現能力與擴大影響。若名下事件全數被解決，將進入『收容狀態』，需繪製『突破收容』作品方可解除限制。",
+    body: "透過繪製並上傳『異常災害』作品展現異常能力與擴大影響。若名下災害事件被全數被解決（威脅分數歸0），將進入『收容狀態』，『收容狀態』無法發布『異常災害』，需繪製『突破收容』作品解除此限制。",
   },
   {
     id: "public",
@@ -72,9 +72,20 @@ function TypedBody({ text, active }) {
 
 export default function Guidelines() {
   const [openId, setOpenId] = useState(null)
+  const cardsRef = useRef(null)
 
-  function toggleFaction(id) {
-    setOpenId((current) => (current === id ? null : id))
+  useEffect(() => {
+    if (!openId) return undefined
+    const onPointerDown = (event) => {
+      if (cardsRef.current?.contains(event.target)) return
+      setOpenId(null)
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [openId])
+
+  function openFaction(id) {
+    setOpenId(id)
   }
 
   return (
@@ -97,7 +108,7 @@ export default function Guidelines() {
       <div id="guidelines-panel" className="panel hud-corner p-5 sm:p-7">
         <div className="space-y-4">
           <p className="font-mono text-[11px] tracking-[0.22em] text-ash">FACTION INDEX // 陣營</p>
-          <div className="grid gap-3">
+          <div ref={cardsRef} className="grid gap-3">
             {FACTIONS.map((faction) => {
               const Icon = faction.icon
               const open = openId === faction.id
@@ -108,11 +119,11 @@ export default function Guidelines() {
                     role="button"
                     tabIndex={0}
                     aria-expanded={open}
-                    onClick={() => toggleFaction(faction.id)}
+                    onClick={() => openFaction(faction.id)}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault()
-                        toggleFaction(faction.id)
+                        openFaction(faction.id)
                       }
                     }}
                     className={`faction-card group flex cursor-pointer items-stretch rounded-sm border text-left ${open ? "is-open" : ""}`}
@@ -127,7 +138,19 @@ export default function Guidelines() {
                           {faction.role && (
                             <p className="faction-tone mt-1 font-mono text-[11px] tracking-wide">{faction.role}</p>
                           )}
-                          {faction.body && <TypedBody text={faction.body} active={open} />}
+                          {faction.id === "anomaly" ? (
+                            <div className="mt-3 font-[450] leading-7 text-ash transition-colors duration-300 group-hover:text-black group-focus-within:text-black">
+                              <p>
+                                透過繪製並上傳<span className="font-bold">『異常災害』</span>
+                                作品展現異常能力與擴大影響。若名下災害事件被全數被解決（威脅分數歸0），將進入
+                                <span className="font-bold">『收容狀態』</span>，<span className="font-bold">『收容狀態』</span>
+                                無法發布<span className="font-bold">『異常災害』</span>，需繪製
+                                <span className="font-bold">『突破收容』</span>作品解除此限制。
+                              </p>
+                            </div>
+                          ) : (
+                            faction.body && <TypedBody text={faction.body} active={open} />
+                          )}
                         </div>
                       </div>
                     </div>

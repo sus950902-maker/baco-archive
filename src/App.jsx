@@ -5,26 +5,56 @@ import BootScreen from "./components/BootScreen"
 import Footer from "./components/Footer"
 import Guidelines from "./components/Guidelines"
 import Hero from "./components/Hero"
+import Intranet from "./components/Intranet"
 import IdentityCard from "./components/IdentityCard"
 import NoticeStack from "./components/NoticeStack"
 import ProfileModal from "./components/ProfileModal"
 import SiteSections from "./components/SiteSections"
 import TopBar from "./components/TopBar"
+import { readStoredClearance, storeClearance } from "./clearance"
 import { auth, db, googleProvider } from "./firebase"
 import { issuePublicUid } from "./publicUid"
 import { useScrollReveal } from "./scrollReveal"
 
+function readPage() {
+  return window.location.hash === "#intranet" ? "intranet" : "archive"
+}
+
 export default function App() {
   const [booted, setBooted] = useState(false)
+  const [page, setPage] = useState(readPage)
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
   const [authReady, setAuthReady] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
   const [notices, setNotices] = useState([])
   const [viewedProfile, setViewedProfile] = useState(null)
+  const [clearance, setClearance] = useState(null)
 
   const finishBoot = useCallback(() => setBooted(true), [])
   useScrollReveal(booted)
+
+  useEffect(() => {
+    setClearance(readStoredClearance(user?.uid))
+  }, [user])
+
+  useEffect(() => {
+    const onHash = () => setPage(readPage())
+    window.addEventListener("hashchange", onHash)
+    return () => window.removeEventListener("hashchange", onHash)
+  }, [])
+
+  useEffect(() => {
+    if (page === "intranet") {
+      window.scrollTo(0, 0)
+      return
+    }
+    const id = window.location.hash.replace("#", "")
+    if (!id) return
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView()
+    })
+  }, [page])
 
   const pushNotice = useCallback((notice) => {
     setNotices((current) => {
@@ -55,6 +85,16 @@ export default function App() {
   const removeNotice = useCallback((id) => {
     setNotices((current) => current.filter((entry) => entry.id !== id))
   }, [])
+
+  function grantClearance(level) {
+    if (!user) return
+    storeClearance(user.uid, level)
+    setClearance(level)
+    pushNotice({
+      code: "CLEARANCE // ISSUED",
+      message: level === "high" ? "高級管理權限已核發。" : "中級管理權限已核發。",
+    })
+  }
 
   useEffect(() => {
     return onAuthStateChanged(auth, async (next) => {
@@ -156,20 +196,29 @@ export default function App() {
       {!booted && <BootScreen onDone={finishBoot} />}
 
       <TopBar
+        page={page}
         user={user}
         profile={profile}
         authReady={authReady}
         onLogin={login}
         onLogout={logout}
         onEditProfile={() => setProfileOpen(true)}
+        clearance={clearance}
         onSearch={searchProfiles}
+        onGrantClearance={grantClearance}
         onViewProfile={setViewedProfile}
       />
       <div className="relative z-10" data-reveal-root="">
         <main>
-          <Hero user={user} onNotice={pushNotice} />
-          <Guidelines />
-          <SiteSections />
+          {page === "intranet" ? (
+            <Intranet />
+          ) : (
+            <>
+              <Hero user={user} onNotice={pushNotice} />
+              <Guidelines />
+              <SiteSections />
+            </>
+          )}
         </main>
         <Footer />
       </div>
