@@ -128,6 +128,7 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
         <div className="mt-2 flex justify-center overflow-visible pt-16">
           <div className="roster-slot">
             <div className="panel character-card hud-corner relative min-h-[var(--portrait-h)] overflow-visible pr-[var(--portrait-w)]">
+              <span className="character-edge" aria-hidden="true" />
               <div className="flex w-full min-w-0 items-end gap-4 p-4">
                 {children}
               </div>

@@ -188,6 +188,14 @@ body {
   }
 }
 
+body.page-dark {
+  background-color: #0c0c0c;
+  color: #e2e8f0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
 main :is(h1, h2) {
   color: #000;
 }
@@ -297,6 +305,17 @@ main .text-comment {
 
 .character-card {
   box-shadow: 7px 8px 0 rgba(26, 26, 26, 0.16);
+}
+
+.character-edge {
+  position: absolute;
+  top: -1px;
+  bottom: -1px;
+  left: -1px;
+  z-index: 2;
+  width: 8px;
+  background: #3a3a3a;
+  pointer-events: none;
 }
 
 .faction-card {

@@ -60,6 +60,11 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    document.body.classList.toggle("page-dark", page === "intranet")
+    return () => document.body.classList.remove("page-dark")
+  }, [page])
+
+  useEffect(() => {
     if (page !== "staff" || staffEntry.filter === "全部") return
     setStaffEntry((current) => ({ ...current, filter: "全部" }))
   }, [page, staffEntry.filter])
