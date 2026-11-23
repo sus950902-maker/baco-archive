@@ -25,7 +25,8 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
     const measure = () => {
       const cardBox = card.getBoundingClientRect()
       const copyBox = copy?.getBoundingClientRect()
-      const left = copyBox ? Math.max(0, copyBox.right - cardBox.left) : 0
+      const borderLeft = Number.parseFloat(getComputedStyle(card).borderLeftWidth) || 0
+      const left = copyBox ? Math.max(0, copyBox.right - cardBox.left - borderLeft) : 0
       node.style.left = `${left}px`
       const box = node.getBoundingClientRect()
       setFrame((current) => (current.width === box.width && current.height === box.height ? current : { width: box.width, height: box.height }))
@@ -133,9 +134,8 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
       {error && <p className="mt-2 font-mono text-[11px] text-alert">{error}</p>}
       <div>
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
-        <div className="relative -mx-5 mt-2 w-[calc(100%+2.5rem)] overflow-visible sm:-mx-6 sm:w-[calc(100%+3rem)]">
-          <div className="flex justify-center pt-16">
-          <div className="w-full sm:w-[calc((100%-1rem)/2)] lg:w-[calc((100%-2rem)/3)]">
+        <div className="mt-2 flex justify-center overflow-visible pt-16">
+          <div className="roster-slot">
             <div className="panel hud-corner relative overflow-visible">
               <div ref={copyRef} className="flex w-max max-w-full items-end gap-4 p-4">
                 {children}

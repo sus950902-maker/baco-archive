@@ -92,7 +92,7 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+    <section className="roster-section mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
         <p className="font-mono text-[11px] tracking-[0.22em]" style={{ color: FACTION_COLOR[faction] || "#246b3d" }}>
           CHARACTER FILE // {character.uid} // {faction}

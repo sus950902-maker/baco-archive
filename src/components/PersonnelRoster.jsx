@@ -101,7 +101,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
   }
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+    <section className="roster-section mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">PERSONNEL ROSTER // 公開名冊</p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員配置</h2>
@@ -157,7 +157,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         <ul className="roster-grid mt-6 grid gap-4 pt-10 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-              <button type="button" onClick={() => onOpen(record)} className="panel hud-corner relative w-full overflow-visible text-left hover:border-black">
+              <button type="button" onClick={() => onOpen(record)} className="panel hud-corner relative w-full overflow-visible p-0 text-left hover:border-black">
                 <span data-card-copy className="flex w-max max-w-full items-end gap-4 p-4">
                   {record.avatarUrl ? (
                     <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />

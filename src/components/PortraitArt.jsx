@@ -24,7 +24,8 @@ export default function PortraitArt({ url, ratio, scale = 1, frameClass }) {
     const measure = () => {
       const cardBox = card.getBoundingClientRect()
       const copyBox = copy?.getBoundingClientRect()
-      const left = copyBox ? Math.max(0, copyBox.right - cardBox.left) : 0
+      const borderLeft = Number.parseFloat(getComputedStyle(card).borderLeftWidth) || 0
+      const left = copyBox ? Math.max(0, copyBox.right - cardBox.left - borderLeft) : 0
       node.style.left = `${left}px`
       const box = node.getBoundingClientRect()
       setFrame((current) => (current.width === box.width && current.height === box.height ? current : { width: box.width, height: box.height }))
