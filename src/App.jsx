@@ -30,6 +30,8 @@ const PAGES = {
   "#card": "card",
 }
 
+const INTERNAL_PAGES = new Set(["intranet", "announcements", "staff", "staff-admin", "card"])
+
 function readPage() {
   return PAGES[window.location.hash] || "archive"
 }
@@ -62,13 +64,19 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.body.classList.toggle("page-dark", page === "intranet" || page === "announcements")
-    document.body.classList.toggle("page-roster", page === "staff")
+    const hidden = authReady && !user && INTERNAL_PAGES.has(page)
+    document.body.classList.toggle("page-dark", !hidden && (page === "intranet" || page === "announcements"))
+    document.body.classList.toggle("page-roster", !hidden && page === "staff")
     return () => {
       document.body.classList.remove("page-dark")
       document.body.classList.remove("page-roster")
     }
-  }, [page])
+  }, [page, authReady, user])
+
+  useEffect(() => {
+    if (!authReady || user || !INTERNAL_PAGES.has(page)) return
+    window.location.hash = ""
+  }, [authReady, user, page])
 
   useEffect(() => {
     if (page !== "staff" || staffEntry.filter === "全部") return
@@ -258,17 +266,18 @@ export default function App() {
   const role = isStaffRole(profile?.role) ? profile.role : profile?.role === "low" ? "low" : roleFromClearance(clearance)
   const staff = isStaffRole(role)
   const shownClearance = role === "admin" ? "high" : role === "moderator" ? "mid" : null
+  const view = authReady && !user && INTERNAL_PAGES.has(page) ? "archive" : page
 
   return (
     <div className="relative flex min-h-screen flex-col">
       <div className="scanlines" />
       <div className="scanbar" />
-      {(page === "intranet" || page === "announcements") && <div className="vignette" />}
+      {(view === "intranet" || view === "announcements") && <div className="vignette" />}
 
       {!booted && <BootScreen onDone={finishBoot} />}
 
       <TopBar
-        page={page}
+        page={view}
         user={user}
         profile={profile}
         authReady={authReady}
@@ -277,18 +286,18 @@ export default function App() {
         onEditProfile={() => setProfileOpen(true)}
         clearance={shownClearance}
         staff={staff}
-        domainFirst={role === "low" || staff}
+        domainFirst={role === "low" || role === "moderator" || role === "admin"}
         onSearch={searchProfiles}
         onGrantClearance={grantClearance}
         onViewProfile={setViewedProfile}
       />
       <div className="relative z-10 flex flex-1 flex-col" data-reveal-root="">
         <main className="flex flex-1 flex-col">
-          {page === "intranet" ? (
+          {view === "intranet" ? (
             <Intranet />
-          ) : page === "announcements" ? (
+          ) : view === "announcements" ? (
             <AnnouncementHistory staff={staff} onNotice={pushNotice} />
-          ) : page === "staff" ? (
+          ) : view === "staff" ? (
             <PersonnelRoster
               key={staffEntry.token}
               initialFilter={staffEntry.filter}
@@ -298,9 +307,9 @@ export default function App() {
               onOpen={setOpenCharacter}
               onEdit={openEditor}
             />
-          ) : page === "staff-admin" ? (
+          ) : view === "staff-admin" ? (
             <RosterAdmin staff={staff} role={role} ready={authReady} onNotice={pushNotice} />
-          ) : page === "card" && editingCharacter ? (
+          ) : view === "card" && editingCharacter ? (
             <CharacterEditor
               key={editingCharacter.id}
               character={editingCharacter}
@@ -311,7 +320,7 @@ export default function App() {
                 if (window.location.hash !== "#staff") window.location.hash = "#staff"
               }}
             />
-          ) : page === "card" ? (
+          ) : view === "card" ? (
             <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
               <h2 className="text-2xl font-medium sm:text-3xl">編輯角色卡</h2>
               <p className="mt-4 font-mono text-xs tracking-wide text-ash">請先在檔案庫輸入綁定碼。</p>

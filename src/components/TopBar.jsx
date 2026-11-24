@@ -287,7 +287,9 @@ export default function TopBar({
         className={`fixed bottom-0 left-0 z-30 w-[min(100%,18rem)] border-r border-white/10 bg-black transition-transform duration-300 ${open ? "translate-x-0 shadow-[12px_0_32px_rgba(0,0,0,0.35)]" : "pointer-events-none -translate-x-full shadow-none"}`}
         style={{ top: headerHeight }}
       >
-        {(domainFirst ? ["domain", "files"] : ["files", "domain"]).map((section, index) =>
+        {(domainFirst ? ["domain", "files"] : ["files", "domain"])
+          .filter((section) => user || section !== "domain")
+          .map((section, index) =>
           section === "files" ? (
             <div key={section}>
               <p className={`border-b border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment ${index === 0 ? "" : "mt-8 border-t"}`}>

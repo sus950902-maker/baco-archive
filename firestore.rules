@@ -43,6 +43,10 @@ service cloud.firestore {
           && roleFieldsOnly()
           && resource.data.get('role', 'user') == 'user'
           && request.resource.data.role == 'low')
+        || (hasMidClearance()
+          && roleFieldsOnly()
+          && resource.data.role == 'low'
+          && request.resource.data.role == 'user')
       );
       allow delete: if false;
     }

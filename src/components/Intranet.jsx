@@ -5,7 +5,6 @@ import { db } from "../firebase"
 import AnnouncementLine from "./AnnouncementLine"
 import WorldMap from "./WorldMap"
 
-const SEEN_KEY = "baco-announcement-seen"
 const POP_MS = 3000
 
 function formatStamp(millis) {
@@ -17,15 +16,8 @@ function formatStamp(millis) {
 
 export function AnnouncementTicker() {
   const [popup, setPopup] = useState(null)
-  const seen = useRef(sessionStorage.getItem(SEEN_KEY) || "")
   const ready = useRef(false)
   const known = useRef(new Set())
-
-  function show(item) {
-    seen.current = item.id
-    sessionStorage.setItem(SEEN_KEY, item.id)
-    setPopup(item)
-  }
 
   useEffect(() => {
     const latest = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1))
@@ -36,12 +28,11 @@ export function AnnouncementTicker() {
       if (!ready.current) {
         ready.current = true
         next.forEach((item) => known.current.add(item.id))
-        if (next[0] && next[0].id !== seen.current) show(next[0])
         return
       }
       const added = next.filter((item) => !known.current.has(item.id))
       next.forEach((item) => known.current.add(item.id))
-      if (added[0]) show(added[0])
+      if (added[0]) setPopup(added[0])
     })
   }, [])
 

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react"
-import { collection, onSnapshot, query, where } from "firebase/firestore"
-import { characterTitle, claimCharacter, FACTION_COLOR, factionLabel, publicCharacter } from "../characters"
+import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
+import { characterTitle, claimCharacter, FACTION_COLOR, factionLabel } from "../characters"
 import PortraitArt from "./PortraitArt"
-import { db } from "../firebase"
 
 const FILTERS = ["全部", "我的檔案", "調查員", "異常", "民眾", "議會"]
 
@@ -36,26 +35,20 @@ function byMine(left, right) {
 }
 
 export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdit, initialFilter = "全部" }) {
-  const [records, setRecords] = useState([])
+  const cached = peekBoundRoster()
+  const [records, setRecords] = useState(cached.records)
   const [filter, setFilter] = useState(initialFilter)
   const [code, setCode] = useState("")
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
-  const [loadError, setLoadError] = useState("")
+  const [loadError, setLoadError] = useState(cached.error)
   const [entrance, setEntrance] = useState(0)
   const [search, setSearch] = useState("")
 
-  useEffect(() => {
-    const roster = query(collection(db, "characters"), where("status", "==", "bound"))
-    return onSnapshot(
-      roster,
-      (snap) => {
-        setLoadError("")
-        setRecords(snap.docs.map((entry) => publicCharacter(entry.id, entry.data())))
-      },
-      () => setLoadError("內部名冊讀取失敗"),
-    )
-  }, [])
+  useEffect(() => subscribeBoundRoster((snapshot) => {
+    setRecords(snapshot.records)
+    setLoadError(snapshot.error)
+  }), [])
 
   const needle = search.trim().toLowerCase()
   const visible = records.filter((record) => {

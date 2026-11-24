@@ -56,11 +56,24 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
     if (!staff) return undefined
     const owners = new Set(records.filter((record) => record.status === "bound" && record.ownerUid).map((record) => record.ownerUid))
     accounts.forEach((account) => {
-      if ((account.role && account.role !== "user") || !owners.has(account.id) || lowSynced.current.has(account.id)) return
-      lowSynced.current.add(account.id)
-      updateDoc(doc(db, "users", account.id), { role: "low", updatedAt: serverTimestamp() }).catch(() => {
-        lowSynced.current.delete(account.id)
-      })
+      const owns = owners.has(account.id)
+      const grantKey = account.id
+      const revokeKey = `drop:${account.id}`
+      if (owns) lowSynced.current.delete(revokeKey)
+      if (owns && (!account.role || account.role === "user") && !lowSynced.current.has(grantKey)) {
+        lowSynced.current.add(grantKey)
+        updateDoc(doc(db, "users", account.id), { role: "low", updatedAt: serverTimestamp() }).catch(() => {
+          lowSynced.current.delete(grantKey)
+        })
+        return
+      }
+      if (!owns && account.role === "low" && !lowSynced.current.has(revokeKey)) {
+        lowSynced.current.add(revokeKey)
+        lowSynced.current.delete(grantKey)
+        updateDoc(doc(db, "users", account.id), { role: "user", updatedAt: serverTimestamp() }).catch(() => {
+          lowSynced.current.delete(revokeKey)
+        })
+      }
     })
     return undefined
   }, [staff, accounts, records])
@@ -145,9 +158,29 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
   }
 
   const owners = new Set(records.filter((record) => record.status === "bound" && record.ownerUid).map((record) => record.ownerUid))
+  const accountNames = new Map(accounts.map((account) => [account.id, account.displayName || ""]))
+  const accountById = new Map(accounts.map((account) => [account.id, account]))
   const highAccounts = accounts.filter((account) => account.role === "admin")
   const midAccounts = accounts.filter((account) => account.role === "moderator")
-  const lowAccounts = accounts.filter((account) => account.role !== "admin" && account.role !== "moderator" && (account.role === "low" || owners.has(account.id)))
+  const lowAccounts = []
+  const seenLow = new Set()
+  function addLow(account) {
+    if (!account?.id || seenLow.has(account.id) || account.role === "admin" || account.role === "moderator") return
+    seenLow.add(account.id)
+    lowAccounts.push(account)
+  }
+  accounts.forEach((account) => {
+    if (account.role === "low" || owners.has(account.id)) addLow(account)
+  })
+  owners.forEach((ownerUid) => {
+    const account = accountById.get(ownerUid)
+    if (account) {
+      addLow(account)
+      return
+    }
+    const named = records.find((record) => record.ownerUid === ownerUid && record.ownerName)
+    addLow({ id: ownerUid, displayName: named?.ownerName || "未命名", publicUid: "", email: "" })
+  })
   const counts = Object.fromEntries(FACTIONS.map((item) => [item, records.filter((record) => record.faction === item).length]))
   const visible = records.filter((record) => record.faction === faction).sort((left, right) => {
     const leftNo = Number(left.fileNo)
@@ -234,7 +267,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
         ) : (
           <ul className="mt-4 divide-y divide-black/10 overflow-x-auto">
             {visible.map((record) => (
-              <li key={record.id} className="grid min-w-[44rem] grid-cols-[9rem_5rem_3.5rem_4.5rem_minmax(8rem,1fr)_auto] items-center gap-x-4 py-3">
+              <li key={record.id} className="grid min-w-[56rem] grid-cols-[9rem_5rem_3.5rem_4.5rem_minmax(6rem,1fr)_minmax(6rem,1fr)_auto] items-center gap-x-4 py-3">
                 <span className="font-mono text-sm tracking-[0.16em]">{record.bindCode || "——"}</span>
                 <span className="font-mono text-[11px] tracking-[0.14em]" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
                   {record.faction}
@@ -244,6 +277,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
                   {record.status === "bound" ? "已綁定" : "未綁定"}
                 </span>
                 <span className="truncate text-sm text-ash">{record.name && record.name !== "未命名" ? record.name : ""}</span>
+                <span className="truncate text-sm">{record.status === "bound" ? accountNames.get(record.ownerUid) || record.ownerName || "" : ""}</span>
                 <span className="flex gap-2">
                   {record.bindCode && (
                     <button type="button" onClick={() => copyCode(record.bindCode)} className="border border-black/20 px-2 py-1.5 font-mono text-[11px] text-ink hover:border-alert hover:text-alert">
