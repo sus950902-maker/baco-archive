@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { collection, onSnapshot } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
 import { db } from "../firebase"
@@ -44,23 +44,55 @@ export default function Intranet() {
     })
   }, [])
 
-  useEffect(() => {
-    if (!popup) return undefined
-    const timer = window.setTimeout(() => setPopup(null), POP_MS)
-    return () => window.clearTimeout(timer)
-  }, [popup])
+  const dismissPopup = useCallback(() => setPopup(null), [])
 
   return (
     <section className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      {popup && (
-        <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-24 sm:top-6">
-          <div className="announcement-pop w-[min(32rem,100%)] border border-white/20 bg-black px-4 py-3 text-center text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
-            <AnnouncementLine item={popup} className="text-sm leading-6" />
-            <p className="mt-1 font-mono text-[10px] tracking-[0.14em] text-white">{formatStamp(popup.createdAt)}</p>
-          </div>
-        </div>
-      )}
+      {popup && <AnnouncementPop key={popup.id} item={popup} onDone={dismissPopup} />}
       <WorldMap />
     </section>
+  )
+}
+
+function AnnouncementPop({ item, onDone }) {
+  const barRef = useRef(null)
+  const [open, setOpen] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setOpen(true))
+    const hold = window.setTimeout(() => setLeaving(true), POP_MS)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(hold)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!leaving) return undefined
+    const bar = barRef.current
+    if (!bar) return undefined
+    const width = bar.offsetWidth
+    bar.style.transition = "none"
+    bar.style.width = `${width}px`
+    bar.getBoundingClientRect()
+    bar.style.transition = "width 0.4s ease, padding 0.4s ease, border-width 0.4s ease"
+    bar.style.width = "0px"
+    bar.style.paddingLeft = "0px"
+    bar.style.paddingRight = "0px"
+    bar.style.borderWidth = "0px"
+    const done = window.setTimeout(onDone, 420)
+    return () => window.clearTimeout(done)
+  }, [leaving, onDone])
+
+  return (
+    <div className={`announcement-reveal ${open ? "is-open" : ""}`} style={{ top: "var(--header-h, 6.5rem)" }}>
+      <div className="announcement-reveal-clip">
+        <div ref={barRef} className="announcement-bar">
+          <AnnouncementLine item={item} className="text-xs leading-5 whitespace-nowrap" />
+          <span className="shrink-0 font-mono text-[10px] tracking-[0.12em] text-white">{formatStamp(item.createdAt)}</span>
+        </div>
+      </div>
+    </div>
   )
 }

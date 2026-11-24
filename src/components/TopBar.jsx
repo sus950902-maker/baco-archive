@@ -73,7 +73,10 @@ export default function TopBar({
   useEffect(() => {
     const header = headerRef.current
     if (!header) return undefined
-    const measure = () => setHeaderHeight(header.offsetHeight)
+    const measure = () => {
+      setHeaderHeight(header.offsetHeight)
+      document.documentElement.style.setProperty("--header-h", `${header.offsetHeight}px`)
+    }
     measure()
     const observer = new ResizeObserver(measure)
     observer.observe(header)
