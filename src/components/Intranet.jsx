@@ -6,7 +6,7 @@ import AnnouncementLine from "./AnnouncementLine"
 import WorldMap from "./WorldMap"
 
 const SEEN_KEY = "baco-announcement-seen"
-const POP_MS = 4500
+const POP_MS = 3000
 
 function formatStamp(millis) {
   if (!millis) return ""
@@ -86,7 +86,7 @@ function AnnouncementPop({ item, onDone }) {
   }, [leaving, onDone])
 
   return (
-    <div className={`announcement-reveal ${open ? "is-open" : ""}`} style={{ top: "var(--header-h, 6.5rem)" }}>
+    <div className={`announcement-reveal ${open ? "is-open" : ""}`} style={{ top: "calc(var(--header-h, 6.5rem) + 1.25rem)" }}>
       <div className="announcement-reveal-clip">
         <div ref={barRef} className="announcement-bar">
           <AnnouncementLine item={item} className="text-xs leading-5 whitespace-nowrap" />

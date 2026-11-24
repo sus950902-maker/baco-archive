@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { collection, deleteDoc, doc, onSnapshot } from "firebase/firestore"
+import { addDoc, collection, deleteDoc, doc, onSnapshot, serverTimestamp } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
 import { db } from "../firebase"
 import AnnouncementLine from "./AnnouncementLine"
@@ -18,11 +18,27 @@ export default function AnnouncementHistory({ staff, onNotice }) {
   useEffect(() => {
     return onSnapshot(collection(db, "announcements"), (snap) => {
       const next = snap.docs
+        .filter((entry) => !entry.data().ephemeral)
         .map((entry) => readAnnouncement(entry.id, entry.data()))
         .sort((left, right) => right.createdAt - left.createdAt || right.id.localeCompare(left.id))
       setItems(next)
     })
   }, [])
+
+  async function publishTest() {
+    try {
+      const created = await addDoc(collection(db, "announcements"), {
+        text: "測試123456789",
+        ephemeral: true,
+        createdAt: serverTimestamp(),
+      })
+      window.setTimeout(() => {
+        deleteDoc(created).catch(() => {})
+      }, 4000)
+    } catch (error) {
+      onNotice?.({ code: "ANNOUNCE // DENIED", message: error.message || "測試公告發布失敗" })
+    }
+  }
 
   async function remove(item) {
     try {
@@ -40,9 +56,16 @@ export default function AnnouncementHistory({ staff, onNotice }) {
           <p className="font-mono text-[11px] tracking-[0.22em] text-white">INTERNAL DOMAIN // BULLETIN</p>
           <h2 className="mt-2 text-2xl font-medium text-white sm:text-3xl">歷史公告</h2>
         </div>
-        <a href="#intranet" className="border border-white/20 px-3 py-2 font-mono text-xs tracking-wide text-white hover:border-white">
-          [ 返回內部網域 ]
-        </a>
+        <div className="flex flex-wrap items-center gap-2">
+          {staff && (
+            <button type="button" onClick={publishTest} className="border border-white/20 px-3 py-2 font-mono text-xs tracking-wide text-white hover:border-white">
+              [ 發布測試 ]
+            </button>
+          )}
+          <a href="#intranet" className="border border-white/20 px-3 py-2 font-mono text-xs tracking-wide text-white hover:border-white">
+            [ 返回內部網域 ]
+          </a>
+        </div>
       </div>
       {items.length === 0 ? (
         <p className="font-mono text-xs tracking-wide text-white">尚無公告</p>
