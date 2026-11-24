@@ -7,6 +7,7 @@ import CharacterEditor from "./components/CharacterEditor"
 import CharacterModal from "./components/CharacterModal"
 import Guidelines from "./components/Guidelines"
 import Hero from "./components/Hero"
+import AnnouncementHistory from "./components/AnnouncementHistory"
 import Intranet from "./components/Intranet"
 import PersonnelRoster from "./components/PersonnelRoster"
 import RosterAdmin from "./components/RosterAdmin"
@@ -23,6 +24,7 @@ import { useScrollReveal } from "./scrollReveal"
 
 const PAGES = {
   "#intranet": "intranet",
+  "#announcements": "announcements",
   "#staff": "staff",
   "#staff-admin": "staff-admin",
   "#card": "card",
@@ -60,7 +62,7 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.body.classList.toggle("page-dark", page === "intranet")
+    document.body.classList.toggle("page-dark", page === "intranet" || page === "announcements")
     return () => document.body.classList.remove("page-dark")
   }, [page])
 
@@ -257,7 +259,7 @@ export default function App() {
     <div className="relative flex min-h-screen flex-col">
       <div className="scanlines" />
       <div className="scanbar" />
-      {page === "intranet" && <div className="vignette" />}
+      {(page === "intranet" || page === "announcements") && <div className="vignette" />}
 
       {!booted && <BootScreen onDone={finishBoot} />}
 
@@ -278,7 +280,9 @@ export default function App() {
       <div className="relative z-10 flex flex-1 flex-col" data-reveal-root="">
         <main className="flex-1">
           {page === "intranet" ? (
-            <Intranet staff={staff} onNotice={pushNotice} />
+            <Intranet />
+          ) : page === "announcements" ? (
+            <AnnouncementHistory staff={staff} onNotice={pushNotice} />
           ) : page === "staff" ? (
             <PersonnelRoster
               key={staffEntry.token}

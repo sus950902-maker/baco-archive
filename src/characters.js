@@ -221,12 +221,40 @@ export async function claimCharacter(rawCode, user, profile) {
 
 export async function publishCharacterAnnouncement(record) {
   const name = record.name || "未命名"
-  const code = `${record.faction || ""}${record.fileNo || ""}`
+  const faction = record.faction || ""
+  const fileNo = record.fileNo || ""
+  const code = `${faction}${fileNo}`
   await addDoc(collection(db, "announcements"), {
-    text: code ? `創角公告 ${code} ${name}已錄入檔案數據庫` : `創角公告 ${name}已錄入檔案數據庫`,
+    text: code ? `${code} ${name} 已錄入檔案數據庫` : `${name} 已錄入檔案數據庫`,
+    faction,
+    fileNo,
+    characterName: name,
     characterId: record.id,
     createdAt: serverTimestamp(),
   })
+}
+
+export function readAnnouncement(id, data) {
+  const text = data.text || ""
+  const saved = {
+    id,
+    text,
+    faction: data.faction || "",
+    fileNo: data.fileNo || "",
+    characterName: data.characterName || "",
+    createdAt: data.createdAt?.toMillis?.() || 0,
+  }
+  if (saved.faction || saved.characterName) return saved
+  const body = text.replace(/^創角公告\s*/, "")
+  const suffix = "已錄入檔案數據庫"
+  if (!body.endsWith(suffix)) return saved
+  const head = body.slice(0, -suffix.length).trim()
+  const faction = FACTIONS.find((item) => head.startsWith(item)) || ""
+  const after = (faction ? head.slice(faction.length) : head).trim().replace(/^[-]+/, "")
+  const split = after.match(/^([A-Za-z0-9]+)(?:[-\s]+)(.+)$/)
+  if (split) return { ...saved, faction, fileNo: split[1], characterName: split[2].trim() }
+  if (faction || after) return { ...saved, faction, characterName: after }
+  return saved
 }
 
 export async function removeCharacter(character) {

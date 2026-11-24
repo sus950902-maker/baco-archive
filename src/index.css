@@ -200,6 +200,10 @@ main :is(h1, h2) {
   color: #000;
 }
 
+body.page-dark main :is(h1, h2) {
+  color: #fff;
+}
+
 main .text-ink {
   color: #1a1a1a;
 }
