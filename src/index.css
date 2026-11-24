@@ -154,6 +154,42 @@ body {
   overflow-clip-margin: 2.75rem 1rem 1rem 0.5rem;
 }
 
+.roster-dark {
+  position: relative;
+}
+
+.roster-dark::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -2.15rem;
+  bottom: -4rem;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background-color: #f6f6f6;
+  background-image:
+    linear-gradient(to bottom, rgba(26, 26, 26, 0.16), rgba(26, 26, 26, 0) 0.4rem),
+    linear-gradient(rgba(0, 0, 0, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.045) 1px, transparent 1px);
+  background-size: 100% 0.4rem, 42px 42px, 42px 42px;
+  background-repeat: no-repeat, repeat, repeat;
+  background-position: center top, center top, center top;
+}
+
+@media (min-width: 640px) {
+  .roster-dark::before {
+    bottom: -6rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .roster-dark::before {
+    background-attachment: scroll, fixed, fixed;
+  }
+}
+
 :root {
   --portrait-w: 8.75rem;
   --portrait-h: calc(2rem + 4rem * 9 / 7);
@@ -308,6 +344,7 @@ main .text-comment {
 }
 
 .character-card {
+  background: #fff;
   box-shadow: 7px 8px 0 rgba(26, 26, 26, 0.16);
 }
 

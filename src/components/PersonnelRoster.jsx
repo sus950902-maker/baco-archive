@@ -90,7 +90,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
   }
 
   return (
-    <section className="roster-section mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+    <section className="roster-section mx-auto flex w-full max-w-6xl flex-1 flex-col px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">PERSONNEL ROSTER // 內部名冊</p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">檔案庫</h2>
@@ -142,14 +142,15 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         />
       </div>
 
+      <div className="roster-dark mt-16 flex-1">
       {loadError ? (
-        <p className="mt-8 font-mono text-xs tracking-wide text-alert">{loadError}</p>
+        <p className="font-mono text-xs tracking-wide text-alert">{loadError}</p>
       ) : ordered.length === 0 ? (
-        <p className="mt-16 font-mono text-xs tracking-wide text-ash">
+        <p className="font-mono text-xs tracking-wide text-ash">
           {needle ? "沒有符合的檔案" : filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
         </p>
       ) : (
-        <ul className="roster-grid mt-16 grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="roster-grid grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
               <button type="button" onClick={() => onOpen(record)} className={`panel character-card hud-corner relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
@@ -186,6 +187,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           ))}
         </ul>
       )}
+      </div>
     </section>
   )
 }

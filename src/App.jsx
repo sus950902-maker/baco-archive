@@ -279,7 +279,7 @@ export default function App() {
         onViewProfile={setViewedProfile}
       />
       <div className="relative z-10 flex flex-1 flex-col" data-reveal-root="">
-        <main className="flex-1">
+        <main className="flex flex-1 flex-col">
           {page === "intranet" ? (
             <Intranet />
           ) : page === "announcements" ? (
