@@ -130,6 +130,7 @@ body {
 }
 
 .roster-section {
+  width: 100%;
   container-type: inline-size;
 }
 
@@ -222,6 +223,10 @@ body {
   body {
     background-attachment: fixed;
   }
+}
+
+body.page-roster {
+  background-image: none;
 }
 
 body.page-dark {

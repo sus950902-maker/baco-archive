@@ -270,7 +270,7 @@ export function characterTitle(record) {
 
 export function factionLabel(record) {
   const faction = record?.faction || ""
-  if ((faction === "調查員" || faction === "異常") && record?.fileNo) return `${faction} ${record.fileNo}`
+  if ((faction === "調查員" || faction === "異常") && record?.fileNo) return `${faction} 編號：${record.fileNo}`
   return faction
 }
 

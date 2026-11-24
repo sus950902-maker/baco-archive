@@ -63,7 +63,11 @@ export default function App() {
 
   useEffect(() => {
     document.body.classList.toggle("page-dark", page === "intranet" || page === "announcements")
-    return () => document.body.classList.remove("page-dark")
+    document.body.classList.toggle("page-roster", page === "staff")
+    return () => {
+      document.body.classList.remove("page-dark")
+      document.body.classList.remove("page-roster")
+    }
   }, [page])
 
   useEffect(() => {
