@@ -277,7 +277,7 @@ export default function App() {
       <div className="relative z-10 flex flex-1 flex-col" data-reveal-root="">
         <main className="flex-1">
           {page === "intranet" ? (
-            <Intranet />
+            <Intranet staff={staff} onNotice={pushNotice} />
           ) : page === "staff" ? (
             <PersonnelRoster
               key={staffEntry.token}

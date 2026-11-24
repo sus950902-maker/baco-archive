@@ -145,6 +145,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
   }
 
   const owners = new Set(records.filter((record) => record.status === "bound" && record.ownerUid).map((record) => record.ownerUid))
+  const highAccounts = accounts.filter((account) => account.role === "admin")
   const midAccounts = accounts.filter((account) => account.role === "moderator")
   const lowAccounts = accounts.filter((account) => account.role !== "admin" && account.role !== "moderator" && (account.role === "low" || owners.has(account.id)))
   const counts = Object.fromEntries(FACTIONS.map((item) => [item, records.filter((record) => record.faction === item).length]))
@@ -267,7 +268,23 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
       <div className="panel hud-corner mt-10 p-5 sm:p-6">
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">CLEARANCE // ACCOUNTS</p>
         <h3 className="mt-2 text-xl font-medium">權限帳號</h3>
-        <p className="mt-6 font-mono text-[11px] tracking-[0.16em] text-ash">中級管理</p>
+        <p className="mt-6 font-mono text-[11px] tracking-[0.16em] text-ash">高級管理</p>
+        {highAccounts.length === 0 ? (
+          <p className="mt-3 font-mono text-xs text-ash">尚無高級管理帳號</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-black/10">
+            {highAccounts.map((account) => (
+              <li key={account.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm">{account.displayName || "未命名"}</span>
+                  <span className="mt-1 block font-mono text-[11px] tracking-[0.14em] text-ash">{account.publicUid || account.email || account.id}</span>
+                </span>
+                <span className="font-mono text-[11px] tracking-[0.14em] text-ink">高級</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-8 font-mono text-[11px] tracking-[0.16em] text-ash">中級管理</p>
         {midAccounts.length === 0 ? (
           <p className="mt-3 font-mono text-xs text-ash">尚無中級管理帳號</p>
         ) : (
