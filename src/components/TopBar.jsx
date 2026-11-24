@@ -65,6 +65,7 @@ export default function TopBar({
   const [searchValue, setSearchValue] = useState("")
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const granting = useRef(false)
 
   useEffect(() => {
     const timer = setInterval(() => setStamp(formatStamp(new Date())), 1000)
@@ -99,16 +100,32 @@ export default function TopBar({
     return () => window.removeEventListener("keydown", onKey)
   }, [open, searchOpen])
 
+  async function grantFromSearch(level) {
+    if (granting.current) return
+    granting.current = true
+    try {
+      await onGrantClearance(level)
+    } finally {
+      granting.current = false
+    }
+    setSearchValue("")
+    setResults([])
+    setSearchOpen(false)
+  }
+
+  function changeSearch(value) {
+    setSearchValue(value)
+    const level = matchClearance(value)
+    if (level) grantFromSearch(level)
+  }
+
   async function submitSearch(event) {
     event.preventDefault()
     const value = searchValue.trim()
     if (!value || searching) return
     const level = matchClearance(value)
     if (level) {
-      onGrantClearance(level)
-      setSearchValue("")
-      setResults([])
-      setSearchOpen(false)
+      grantFromSearch(level)
       return
     }
     setSearching(true)
@@ -243,7 +260,7 @@ export default function TopBar({
             autoFocus
             value={searchValue}
             disabled={searching}
-            onChange={(event) => setSearchValue(event.target.value)}
+            onChange={(event) => changeSearch(event.target.value)}
             placeholder="名稱或 UID"
             aria-label="搜尋名稱或 UID"
             className="ml-auto block w-full max-w-sm border border-line bg-black px-3 py-2 font-mono text-xs text-ink outline-none focus:border-alert"

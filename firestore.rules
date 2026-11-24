@@ -34,7 +34,7 @@ service cloud.firestore {
       allow update: if signedIn() && (
         (request.auth.uid == userId
           && request.resource.data.role in ['user', 'low', 'moderator', 'admin']
-          && (keepsRole() || hasMidClearance() || resource.data.get('role', 'user') == 'user'))
+          && (keepsRole() || hasMidClearance() || resource.data.get('role', 'user') in ['user', 'low']))
         || (isAdmin()
           && roleFieldsOnly()
           && resource.data.role == 'moderator'

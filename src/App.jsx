@@ -127,19 +127,27 @@ export default function App() {
 
   async function grantClearance(level) {
     if (!user) return
-    const role = roleFromClearance(level)
+    const nextRole = roleFromClearance(level)
+    const current = profile?.role
+    if (current === "admin" || (current === "moderator" && nextRole !== "admin")) {
+      pushNotice({
+        code: "CLEARANCE // ISSUED",
+        message: current === "admin" ? "目前已是高級管理權限。" : "中級管理權限已核發。",
+      })
+      return
+    }
     storeClearance(user.uid, level)
     setClearance(level)
     try {
-      await setDoc(doc(db, "users", user.uid), { role, clearanceHold: false, updatedAt: serverTimestamp() }, { merge: true })
-      setProfile((current) => ({ ...(current || {}), role }))
+      await setDoc(doc(db, "users", user.uid), { role: nextRole, clearanceHold: false, updatedAt: serverTimestamp() }, { merge: true })
+      setProfile((currentProfile) => ({ ...(currentProfile || {}), role: nextRole, clearanceHold: false }))
     } catch (error) {
       pushNotice({ code: "CLEARANCE // DENIED", message: error.message || "權限寫入失敗" })
       return
     }
     pushNotice({
       code: "CLEARANCE // ISSUED",
-      message: level === "high" ? "高級管理權限已核發。" : "中級管理權限已核發。",
+      message: nextRole === "admin" ? "高級管理權限已核發。" : "中級管理權限已核發。",
     })
   }
 
