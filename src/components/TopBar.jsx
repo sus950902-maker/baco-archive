@@ -49,6 +49,7 @@ export default function TopBar({
   authReady,
   clearance,
   staff,
+  domainFirst,
   onLogin,
   onLogout,
   onEditProfile,
@@ -286,37 +287,46 @@ export default function TopBar({
         className={`fixed bottom-0 left-0 z-30 w-[min(100%,18rem)] border-r border-white/10 bg-black transition-transform duration-300 ${open ? "translate-x-0 shadow-[12px_0_32px_rgba(0,0,0,0.35)]" : "pointer-events-none -translate-x-full shadow-none"}`}
         style={{ top: headerHeight }}
       >
-        <p className="border-b border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment">
-          FILE INDEX
-        </p>
-        <ul className="flex flex-col">
-          {LINKS.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                tabIndex={open ? 0 : -1}
-                onClick={() => setOpen(false)}
-                className="block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide text-ash transition-colors hover:bg-white/5 hover:text-ink"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-8 border-t border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment">
-          INTERNAL DOMAIN
-        </p>
-        {DOMAIN_LINKS.filter((link) => !link.staffOnly || staff).map((link) => (
-          <a
-            key={link.href}
-            href={link.href}
-            tabIndex={open ? 0 : -1}
-            onClick={() => setOpen(false)}
-            className={`block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors ${link.tone === "signal" ? "bg-signal text-black hover:bg-signal/80" : `hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}`}
-          >
-            {link.label}
-          </a>
-        ))}
+        {(domainFirst ? ["domain", "files"] : ["files", "domain"]).map((section, index) =>
+          section === "files" ? (
+            <div key={section}>
+              <p className={`border-b border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment ${index === 0 ? "" : "mt-8 border-t"}`}>
+                FILE INDEX
+              </p>
+              <ul className="flex flex-col">
+                {LINKS.map((link) => (
+                  <li key={link.href}>
+                    <a
+                      href={link.href}
+                      tabIndex={open ? 0 : -1}
+                      onClick={() => setOpen(false)}
+                      className="block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide text-ash transition-colors hover:bg-white/5 hover:text-ink"
+                    >
+                      {link.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : (
+            <div key={section}>
+              <p className={`border-b border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment ${index === 0 ? "" : "mt-8 border-t"}`}>
+                INTERNAL DOMAIN
+              </p>
+              {DOMAIN_LINKS.filter((link) => !link.staffOnly || staff).map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  tabIndex={open ? 0 : -1}
+                  onClick={() => setOpen(false)}
+                  className={`block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors ${link.tone === "signal" ? "bg-signal text-black hover:bg-signal/80" : `hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}`}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          ),
+        )}
       </nav>
     </>
   )

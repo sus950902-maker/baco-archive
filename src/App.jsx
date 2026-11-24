@@ -251,7 +251,7 @@ export default function App() {
     if (window.location.hash !== "#card") window.location.hash = "#card"
   }
 
-  const role = isStaffRole(profile?.role) ? profile.role : roleFromClearance(clearance)
+  const role = isStaffRole(profile?.role) ? profile.role : profile?.role === "low" ? "low" : roleFromClearance(clearance)
   const staff = isStaffRole(role)
   const shownClearance = role === "admin" ? "high" : role === "moderator" ? "mid" : null
 
@@ -273,6 +273,7 @@ export default function App() {
         onEditProfile={() => setProfileOpen(true)}
         clearance={shownClearance}
         staff={staff}
+        domainFirst={role === "low" || staff}
         onSearch={searchProfiles}
         onGrantClearance={grantClearance}
         onViewProfile={setViewedProfile}

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
-import { addDoc, collection, deleteDoc, doc, onSnapshot, serverTimestamp } from "firebase/firestore"
+import { useEffect, useRef, useState } from "react"
+import { addDoc, collection, deleteDoc, doc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, startAfter } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
 import { db } from "../firebase"
 import AnnouncementLine from "./AnnouncementLine"
+import { AnnouncementTicker } from "./Intranet"
 
 function formatStamp(millis) {
   if (!millis) return ""
@@ -11,19 +12,53 @@ function formatStamp(millis) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
+const PAGE = 30
+
+function rowsFrom(docs) {
+  return docs.filter((entry) => !entry.data().ephemeral).map((entry) => readAnnouncement(entry.id, entry.data()))
+}
+
 export default function AnnouncementHistory({ staff, onNotice }) {
-  const [items, setItems] = useState([])
+  const [latest, setLatest] = useState([])
+  const [older, setOlder] = useState([])
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
   const [pendingDelete, setPendingDelete] = useState("")
+  const cursor = useRef(null)
+  const seeded = useRef(false)
 
   useEffect(() => {
-    return onSnapshot(collection(db, "announcements"), (snap) => {
-      const next = snap.docs
-        .filter((entry) => !entry.data().ephemeral)
-        .map((entry) => readAnnouncement(entry.id, entry.data()))
-        .sort((left, right) => right.createdAt - left.createdAt || right.id.localeCompare(left.id))
-      setItems(next)
+    const recent = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(PAGE))
+    return onSnapshot(recent, (snap) => {
+      setLatest(rowsFrom(snap.docs))
+      if (!seeded.current) {
+        cursor.current = snap.docs[snap.docs.length - 1] || null
+        seeded.current = true
+        setHasMore(snap.docs.length === PAGE)
+      }
     })
   }, [])
+
+  async function loadOlder() {
+    if (!cursor.current || loadingOlder) return
+    setLoadingOlder(true)
+    try {
+      const snap = await getDocs(query(collection(db, "announcements"), orderBy("createdAt", "desc"), startAfter(cursor.current), limit(PAGE)))
+      const next = rowsFrom(snap.docs)
+      setOlder((current) => {
+        const seen = new Set(current.map((item) => item.id))
+        return [...current, ...next.filter((item) => !seen.has(item.id))]
+      })
+      cursor.current = snap.docs[snap.docs.length - 1] || null
+      setHasMore(snap.docs.length === PAGE)
+    } catch (error) {
+      onNotice?.({ code: "ANNOUNCE // DENIED", message: error.message || "更早的公告讀取失敗" })
+    } finally {
+      setLoadingOlder(false)
+    }
+  }
+
+  const items = [...latest, ...older.filter((item) => !latest.some((row) => row.id === item.id))]
 
   async function publishTest() {
     try {
@@ -51,6 +86,7 @@ export default function AnnouncementHistory({ staff, onNotice }) {
 
   return (
     <section className="mx-auto w-full max-w-6xl px-4 py-16 text-white sm:px-6 sm:py-24">
+      <AnnouncementTicker />
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="font-mono text-[11px] tracking-[0.22em] text-white">INTERNAL DOMAIN // BULLETIN</p>
@@ -89,6 +125,11 @@ export default function AnnouncementHistory({ staff, onNotice }) {
             </li>
           ))}
         </ul>
+      )}
+      {hasMore && (
+        <button type="button" disabled={loadingOlder} onClick={loadOlder} className="mt-6 border border-white/20 px-3 py-2 font-mono text-xs tracking-wide text-white hover:border-white disabled:opacity-40">
+          {loadingOlder ? "[ 讀取中 ]" : "[ 更早的公告 ]"}
+        </button>
       )}
     </section>
   )

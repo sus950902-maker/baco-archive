@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { collection, onSnapshot } from "firebase/firestore"
+import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
 import { db } from "../firebase"
 import AnnouncementLine from "./AnnouncementLine"
@@ -15,7 +15,7 @@ function formatStamp(millis) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
-export default function Intranet() {
+export function AnnouncementTicker() {
   const [popup, setPopup] = useState(null)
   const seen = useRef(sessionStorage.getItem(SEEN_KEY) || "")
   const ready = useRef(false)
@@ -28,7 +28,8 @@ export default function Intranet() {
   }
 
   useEffect(() => {
-    return onSnapshot(collection(db, "announcements"), (snap) => {
+    const latest = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1))
+    return onSnapshot(latest, (snap) => {
       const next = snap.docs
         .map((entry) => readAnnouncement(entry.id, entry.data()))
         .sort((left, right) => right.createdAt - left.createdAt || right.id.localeCompare(left.id))
@@ -46,9 +47,13 @@ export default function Intranet() {
 
   const dismissPopup = useCallback(() => setPopup(null), [])
 
+  return popup ? <AnnouncementPop key={popup.id} item={popup} onDone={dismissPopup} /> : null
+}
+
+export default function Intranet() {
   return (
     <section className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      {popup && <AnnouncementPop key={popup.id} item={popup} onDone={dismissPopup} />}
+      <AnnouncementTicker />
       <WorldMap />
     </section>
   )
