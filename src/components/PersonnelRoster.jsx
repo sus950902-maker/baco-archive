@@ -154,7 +154,11 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
               <button type="button" onClick={() => onOpen(record)} className={`panel character-card hud-corner relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span className="character-edge" aria-hidden="true" />
-                <span data-card-copy className="flex w-full min-w-0 items-end gap-4 p-4">
+                <span className="character-logo-clip" aria-hidden="true">
+                  <img src="/logo4.png" alt="" className="character-logo" />
+                </span>
+                <span className="character-base" aria-hidden="true" />
+                <span data-card-copy className="relative z-[1] flex w-full min-w-0 items-end gap-4 p-4">
                   {record.avatarUrl ? (
                     <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
                   ) : (

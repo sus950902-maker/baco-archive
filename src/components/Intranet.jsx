@@ -94,6 +94,7 @@ function AnnouncementPop({ item, onDone }) {
     <div className={`announcement-reveal ${open ? "is-open" : ""}`} style={{ top: "calc(var(--header-h, 6.5rem) + 1.25rem)" }}>
       <div className="announcement-reveal-clip">
         <div ref={barRef} className="announcement-bar">
+          <span className="shrink-0 text-xs leading-5 tracking-wide text-white">[  機構公告  ]</span>
           <AnnouncementLine item={item} className="text-xs leading-5 whitespace-nowrap" />
           <span className="shrink-0 font-mono text-[10px] tracking-[0.12em] text-white">{formatStamp(item.createdAt)}</span>
         </div>

@@ -322,6 +322,58 @@ main .text-comment {
   pointer-events: none;
 }
 
+.character-logo-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  container-type: inline-size;
+  pointer-events: none;
+}
+
+.character-logo {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  height: 13.5rem;
+  width: auto;
+  opacity: 0.12;
+  transform: translate(-110%, -50%);
+  transition: transform 0.65s cubic-bezier(0.05, 0.85, 0.15, 1);
+}
+
+.character-card:hover .character-logo,
+.character-card:focus-visible .character-logo {
+  transform: translate(calc(100cqw - 100% + 2.75rem), -50%);
+}
+
+.character-base {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+  width: 2.75rem;
+  height: 2px;
+  background: #3a3a3a;
+  clip-path: polygon(0 100%, 100% 100%, 100% 100%);
+  pointer-events: none;
+  transition:
+    width 0.45s ease,
+    height 0.45s ease,
+    clip-path 0.45s ease;
+}
+
+.character-card:hover .character-base,
+.character-card:focus-visible .character-base {
+  width: min(11rem, 62%);
+  height: 64%;
+  clip-path: polygon(18% 100%, 100% 100%, 100% 0);
+}
+
+.portrait-frame {
+  z-index: 3;
+}
+
 .faction-card {
   position: relative;
   overflow: hidden;
