@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Search } from "lucide-react"
+import { Megaphone, Search } from "lucide-react"
 import { matchClearance } from "../clearance"
 
 function formatStamp(date) {
@@ -214,6 +214,18 @@ export default function TopBar({
           </button>
         )}
       </div>
+      {page === "intranet" && (
+        <button
+          type="button"
+          onClick={() => {
+            window.location.hash = "#announcements"
+          }}
+          className="absolute top-full right-4 z-10 mt-3 flex flex-col items-center gap-1 border border-white/20 bg-black px-2.5 py-2 text-white hover:border-white sm:right-6"
+        >
+          <Megaphone className="h-5 w-5" aria-hidden="true" />
+          <span className="font-mono text-[10px] leading-none tracking-[0.14em]">公告</span>
+        </button>
+      )}
     </header>
 
       {searchOpen && (

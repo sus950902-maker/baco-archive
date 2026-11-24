@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from "react"
-import { Megaphone } from "lucide-react"
 import { collection, onSnapshot } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
 import { db } from "../firebase"
@@ -53,16 +52,6 @@ export default function Intranet() {
 
   return (
     <section className="relative mx-auto w-full max-w-6xl px-4 py-10 sm:px-6 sm:py-14">
-      <button
-        type="button"
-        onClick={() => {
-          window.location.hash = "#announcements"
-        }}
-        className="absolute top-4 right-4 z-20 flex flex-col items-center gap-1 border border-white/20 bg-black px-2.5 py-2 text-white hover:border-white sm:top-6 sm:right-6"
-      >
-        <Megaphone className="h-5 w-5" aria-hidden="true" />
-        <span className="font-mono text-[10px] leading-none tracking-[0.14em]">公告</span>
-      </button>
       {popup && (
         <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-24 sm:top-6">
           <div className="announcement-pop w-[min(32rem,100%)] border border-white/20 bg-black px-4 py-3 text-center text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
