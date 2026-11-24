@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
+import { primeTouch } from "../primeTouch"
 import { characterTitle, claimCharacter, FACTION_COLOR, factionLabel } from "../characters"
 import PortraitArt from "./PortraitArt"
 
@@ -146,7 +147,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         <ul className="roster-grid grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-              <button type="button" onClick={() => onOpen(record)} className={`panel character-card hud-corner relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
+              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card hud-corner relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span className="character-edge" aria-hidden="true" />
                 <span className="character-logo-clip" aria-hidden="true">
                   <img src="/logo4.png" alt="" className="character-logo" />

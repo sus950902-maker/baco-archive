@@ -418,6 +418,83 @@ main .text-comment {
   z-index: 3;
 }
 
+@media (pointer: coarse) {
+  .character-card:hover,
+  .character-card:focus-visible {
+    transform: none;
+    border-color: #d6d1c7;
+  }
+
+  .character-card.is-primed {
+    transform: scale(1.025);
+    border-color: #000;
+  }
+
+  .character-card:hover .character-logo,
+  .character-card:focus-visible .character-logo {
+    transform: translate(-110%, -50%);
+  }
+
+  .character-card.is-primed .character-logo {
+    transform: translate(calc(100cqw - 100% + 2.75rem), -50%);
+  }
+
+  .character-card:hover .character-base,
+  .character-card:focus-visible .character-base {
+    width: 2.75rem;
+    height: 2px;
+    clip-path: polygon(0 100%, 100% 100%, 100% 100%);
+  }
+
+  .character-card.is-primed .character-base {
+    width: min(11rem, 62%);
+    height: 64%;
+    clip-path: polygon(18% 100%, 100% 100%, 100% 0);
+  }
+
+  .faction-card:hover:not(.is-open):not(.is-primed),
+  .faction-card:focus-within:not(.is-open):not(.is-primed) {
+    border-color: #000;
+  }
+
+  .faction-card:hover:not(.is-open):not(.is-primed) .faction-swatch,
+  .faction-card:focus-within:not(.is-open):not(.is-primed) .faction-swatch {
+    background: #000;
+  }
+
+  .faction-card:hover:not(.is-open):not(.is-primed) .faction-tone,
+  .faction-card:focus-within:not(.is-open):not(.is-primed) .faction-tone {
+    color: #000;
+  }
+
+  .faction-card:hover:not(.is-primed)::before,
+  .faction-card:focus-within:not(.is-primed)::before {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  .faction-card.is-primed {
+    border-color: color-mix(in srgb, var(--faction-color) 40%, transparent);
+  }
+
+  .faction-card.is-primed .faction-swatch {
+    background: var(--faction-color);
+  }
+
+  .faction-card.is-primed .faction-tone {
+    color: var(--faction-color);
+  }
+
+  .faction-card.is-primed .text-ash {
+    color: #000;
+  }
+
+  .faction-card.is-primed::before {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 .faction-card {
   position: relative;
   overflow: hidden;

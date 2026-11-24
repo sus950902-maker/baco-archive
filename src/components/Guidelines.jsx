@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { Crosshair, Eye, Landmark, Users } from "lucide-react"
+import { primeTouch } from "../primeTouch"
 
 const FACTIONS = [
   {
@@ -113,7 +114,10 @@ export default function Guidelines() {
                     role="button"
                     tabIndex={0}
                     aria-expanded={open}
-                    onClick={() => openFaction(faction.id)}
+                    onClick={(event) => {
+                      if (primeTouch(event)) return
+                      openFaction(faction.id)
+                    }}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault()
