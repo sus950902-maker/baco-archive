@@ -42,14 +42,8 @@ const FACTIONS = [
 
 function TypedBody({ text, active }) {
   const [count, setCount] = useState(0)
-  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
-
   useEffect(() => {
     if (!active) return undefined
-    if (reduce) {
-      setCount(text.length)
-      return undefined
-    }
     setCount(0)
     let index = 0
     const timer = window.setInterval(() => {
@@ -58,7 +52,7 @@ function TypedBody({ text, active }) {
       if (index >= text.length) window.clearInterval(timer)
     }, 12)
     return () => window.clearInterval(timer)
-  }, [active, reduce, text])
+  }, [active, text])
 
   const shown = text.slice(0, active ? count : text.length)
 

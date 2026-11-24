@@ -6,7 +6,6 @@ export function useScrollReveal(active) {
     const root = document.querySelector("[data-reveal-root]")
     if (!root) return undefined
 
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches
     const known = new WeakSet()
     const revealed = new WeakSet()
     let initial = true
@@ -35,10 +34,6 @@ export function useScrollReveal(active) {
       }
       if (known.has(element) || element.classList.contains("is-in")) return
       known.add(element)
-      if (reduce) {
-        show(element, true)
-        return
-      }
       const rect = element.getBoundingClientRect()
       const visible = rect.bottom > 0 && rect.top < window.innerHeight * 0.92
       if (rect.bottom <= 0 || (!initial && visible)) {

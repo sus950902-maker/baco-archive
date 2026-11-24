@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   getDoc,
+  setDoc,
   updateDoc,
   getDocs,
   limit,
@@ -206,6 +207,13 @@ export async function claimCharacter(rawCode, user, profile) {
     const error = new Error("該檔案已被其他帳號綁定")
     error.code = "taken"
     throw error
+  }
+  if (!isStaffRole(profile?.role)) {
+    try {
+      await setDoc(doc(db, "users", user.uid), { role: "low", updatedAt: serverTimestamp() }, { merge: true })
+    } catch {
+      // 角色已綁定。低級權限會在下次登入時再寫入。
+    }
   }
   return record
 }

@@ -12,18 +12,38 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['moderator', 'admin'];
     }
 
+    function isAdmin() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
     function keepsRole() {
       return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['role'])
         || request.resource.data.role == resource.data.get('role', 'user');
     }
 
+    function roleFieldsOnly() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'clearanceHold', 'updatedAt']);
+    }
+
     match /users/{userId} {
       allow read: if true;
       allow create: if signedIn() && request.auth.uid == userId
-        && request.resource.data.role in ['user', 'moderator', 'admin'];
-      allow update: if signedIn() && request.auth.uid == userId
-        && request.resource.data.role in ['user', 'moderator', 'admin']
-        && (keepsRole() || hasMidClearance() || resource.data.get('role', 'user') == 'user');
+        && request.resource.data.role in ['user', 'low', 'moderator', 'admin'];
+      allow update: if signedIn() && (
+        (request.auth.uid == userId
+          && request.resource.data.role in ['user', 'low', 'moderator', 'admin']
+          && (keepsRole() || hasMidClearance() || resource.data.get('role', 'user') == 'user'))
+        || (isAdmin()
+          && roleFieldsOnly()
+          && resource.data.role == 'moderator'
+          && request.resource.data.role in ['user', 'low'])
+        || (hasMidClearance()
+          && roleFieldsOnly()
+          && resource.data.get('role', 'user') == 'user'
+          && request.resource.data.role == 'low')
+      );
       allow delete: if false;
     }
 

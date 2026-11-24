@@ -10,7 +10,6 @@ export default function GlobeBackdrop() {
     const ctx = canvas.getContext("2d")
     if (!ctx) return undefined
 
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)")
     let frame = 0
     let rotation = 0.6
     let last = performance.now()
@@ -90,7 +89,7 @@ export default function GlobeBackdrop() {
       ctx.lineWidth = 1.6
       ctx.stroke()
 
-      if (!motion.matches) rotation += elapsed * 0.000035
+      rotation += elapsed * 0.000035
       frame = window.requestAnimationFrame(draw)
     }
 

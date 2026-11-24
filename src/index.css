@@ -455,20 +455,3 @@ main .text-comment {
   opacity: 0.9;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation: none !important;
-    transition: none !important;
-  }
-
-  .reveal-right {
-    opacity: 1;
-    transform: none;
-  }
-}

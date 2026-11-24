@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react"
-import { collection, onSnapshot } from "firebase/firestore"
+import { useEffect, useRef, useState } from "react"
+import { collection, doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
 import { assignFileNumbers, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl } from "../media"
 
-export default function RosterAdmin({ staff, ready, onNotice }) {
+export default function RosterAdmin({ staff, role, ready, onNotice }) {
   const [records, setRecords] = useState([])
+  const [accounts, setAccounts] = useState([])
   const [faction, setFaction] = useState(FACTIONS[0])
   const [order, setOrder] = useState("正序")
+  const [pendingRevoke, setPendingRevoke] = useState("")
+  const lowSynced = useRef(new Set())
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState("")
   const [pendingDelete, setPendingDelete] = useState("")
@@ -42,6 +45,26 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     )
   }, [staff])
 
+  useEffect(() => {
+    if (!staff) return undefined
+    return onSnapshot(collection(db, "users"), (snap) => {
+      setAccounts(snap.docs.map((entry) => ({ id: entry.id, ...entry.data() })))
+    })
+  }, [staff])
+
+  useEffect(() => {
+    if (!staff) return undefined
+    const owners = new Set(records.filter((record) => record.status === "bound" && record.ownerUid).map((record) => record.ownerUid))
+    accounts.forEach((account) => {
+      if ((account.role && account.role !== "user") || !owners.has(account.id) || lowSynced.current.has(account.id)) return
+      lowSynced.current.add(account.id)
+      updateDoc(doc(db, "users", account.id), { role: "low", updatedAt: serverTimestamp() }).catch(() => {
+        lowSynced.current.delete(account.id)
+      })
+    })
+    return undefined
+  }, [staff, accounts, records])
+
   async function generate() {
     setBusy(true)
     setError("")
@@ -56,6 +79,21 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
       setError(createError.message || "綁定碼生成失敗")
     } finally {
       setBusy(false)
+    }
+  }
+
+  async function revokeMid(account) {
+    const ownsCard = records.some((record) => record.status === "bound" && record.ownerUid === account.id)
+    try {
+      await updateDoc(doc(db, "users", account.id), {
+        role: ownsCard ? "low" : "user",
+        clearanceHold: true,
+        updatedAt: serverTimestamp(),
+      })
+      setPendingRevoke("")
+      onNotice({ code: "CLEARANCE // REVOKED", message: `${account.displayName || account.publicUid || "帳號"} 的中級管理權已移除。` })
+    } catch (revokeError) {
+      onNotice({ code: "CLEARANCE // DENIED", message: revokeError.message || "管理權移除失敗" })
     }
   }
 
@@ -106,6 +144,9 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
     )
   }
 
+  const owners = new Set(records.filter((record) => record.status === "bound" && record.ownerUid).map((record) => record.ownerUid))
+  const midAccounts = accounts.filter((account) => account.role === "moderator")
+  const lowAccounts = accounts.filter((account) => account.role !== "admin" && account.role !== "moderator" && (account.role === "low" || owners.has(account.id)))
   const counts = Object.fromEntries(FACTIONS.map((item) => [item, records.filter((record) => record.faction === item).length]))
   const visible = records.filter((record) => record.faction === faction).sort((left, right) => {
     const leftNo = Number(left.fileNo)
@@ -218,6 +259,53 @@ export default function RosterAdmin({ staff, ready, onNotice }) {
                     </button>
                   )}
                 </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="panel hud-corner mt-10 p-5 sm:p-6">
+        <p className="font-mono text-[11px] tracking-[0.22em] text-comment">CLEARANCE // ACCOUNTS</p>
+        <h3 className="mt-2 text-xl font-medium">權限帳號</h3>
+        <p className="mt-6 font-mono text-[11px] tracking-[0.16em] text-ash">中級管理</p>
+        {midAccounts.length === 0 ? (
+          <p className="mt-3 font-mono text-xs text-ash">尚無中級管理帳號</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-black/10">
+            {midAccounts.map((account) => (
+              <li key={account.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm">{account.displayName || "未命名"}</span>
+                  <span className="mt-1 block font-mono text-[11px] tracking-[0.14em] text-ash">{account.publicUid || account.email || account.id}</span>
+                </span>
+                {role === "admin" && (
+                  pendingRevoke === account.id ? (
+                    <button type="button" onClick={() => revokeMid(account)} className="border border-alert px-2 py-1.5 font-mono text-[11px] text-alert">
+                      [ 確認移除 ]
+                    </button>
+                  ) : (
+                    <button type="button" onClick={() => setPendingRevoke(account.id)} className="border border-black/20 px-2 py-1.5 font-mono text-[11px] text-ash hover:text-alert">
+                      [ 移除管理權 ]
+                    </button>
+                  )
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-8 font-mono text-[11px] tracking-[0.16em] text-ash">低級權限</p>
+        <p className="mt-2 font-mono text-[11px] text-ash">擁有角色卡的帳號自動具有低級權限。</p>
+        {lowAccounts.length === 0 ? (
+          <p className="mt-3 font-mono text-xs text-ash">尚無低級權限帳號</p>
+        ) : (
+          <ul className="mt-3 divide-y divide-black/10">
+            {lowAccounts.map((account) => (
+              <li key={account.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm">{account.displayName || "未命名"}</span>
+                  <span className="mt-1 block font-mono text-[11px] tracking-[0.14em] text-ash">{account.publicUid || account.email || account.id}</span>
+                </span>
+                <span className="font-mono text-[11px] tracking-[0.14em] text-ash">低級</span>
               </li>
             ))}
           </ul>

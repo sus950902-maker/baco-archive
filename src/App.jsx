@@ -117,7 +117,7 @@ export default function App() {
     storeClearance(user.uid, level)
     setClearance(level)
     try {
-      await setDoc(doc(db, "users", user.uid), { role, updatedAt: serverTimestamp() }, { merge: true })
+      await setDoc(doc(db, "users", user.uid), { role, clearanceHold: false, updatedAt: serverTimestamp() }, { merge: true })
       setProfile((current) => ({ ...(current || {}), role }))
     } catch (error) {
       pushNotice({ code: "CLEARANCE // DENIED", message: error.message || "權限寫入失敗" })
@@ -144,13 +144,25 @@ export default function App() {
         if (snap.exists()) {
           const data = snap.data()
           const storedLevel = readStoredClearance(next.uid)
-          if (storedLevel && !isStaffRole(data.role)) {
+          if (storedLevel && !isStaffRole(data.role) && !data.clearanceHold) {
             const role = roleFromClearance(storedLevel)
             try {
-              await setDoc(doc(db, "users", next.uid), { role }, { merge: true })
+              await setDoc(doc(db, "users", next.uid), { role, clearanceHold: false }, { merge: true })
               data.role = role
+              data.clearanceHold = false
             } catch {
               data.role = role
+            }
+          }
+          if (!isStaffRole(data.role) && data.role !== "low") {
+            try {
+              const owned = await getDocs(query(collection(db, "characters"), where("ownerUid", "==", next.uid), limit(1)))
+              if (!owned.empty) {
+                await setDoc(doc(db, "users", next.uid), { role: "low" }, { merge: true })
+                data.role = "low"
+              }
+            } catch {
+              // 角色擁有狀態讀取失敗時保留原權限。
             }
           }
           if (!data.publicUid) {
@@ -277,7 +289,7 @@ export default function App() {
               onEdit={openEditor}
             />
           ) : page === "staff-admin" ? (
-            <RosterAdmin staff={staff} ready={authReady} onNotice={pushNotice} />
+            <RosterAdmin staff={staff} role={role} ready={authReady} onNotice={pushNotice} />
           ) : page === "card" && editingCharacter ? (
             <CharacterEditor
               key={editingCharacter.id}

@@ -4,21 +4,21 @@ const SECTIONS = [
     code: "SECTOR 03 // FIELD PLAY",
     title: "企劃須知",
     file: "FILE STATUS // COMPILING",
-    body: "本區玩法檔案建置中。",
+    body: "建置中",
   },
   {
     id: "social",
     code: "SECTOR 04 // UPLINK",
     title: "社群媒體",
     file: "CHANNEL INDEX // STANDBY",
-    body: "對外頻道整理中。",
+    body: "建置中",
   },
   {
     id: "protocol",
     code: "SECTOR 05 // DIRECTIVE",
     title: "協議聲明",
     file: "B.A.C.O. SECURITY PROTOCOL",
-    body: "未經授權嚴禁外流檔案內容。本檔案僅供授權人員於內部封存系統內閱覽，任何複製、轉載或對外散佈均視為違反收容協議。",
+    body: "建置中",
   },
 ]
 
