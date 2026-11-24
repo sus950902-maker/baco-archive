@@ -216,17 +216,17 @@ export async function claimCharacter(rawCode, user, profile) {
       // 角色已綁定。低級權限會在下次登入時再寫入。
     }
   }
-  const name = record.name || "未命名"
-  try {
-    await addDoc(collection(db, "announcements"), {
-      text: record.fileNo ? `${record.fileNo}-${name}已錄入檔案數據庫` : `${name}已錄入檔案數據庫`,
-      characterId: record.id,
-      createdAt: serverTimestamp(),
-    })
-  } catch {
-    // 角色已綁定。公告寫入失敗時不撤回綁定。
-  }
   return record
+}
+
+export async function publishCharacterAnnouncement(record) {
+  const name = record.name || "未命名"
+  const code = `${record.faction || ""}${record.fileNo || ""}`
+  await addDoc(collection(db, "announcements"), {
+    text: code ? `創角公告 ${code} ${name}已錄入檔案數據庫` : `創角公告 ${name}已錄入檔案數據庫`,
+    characterId: record.id,
+    createdAt: serverTimestamp(),
+  })
 }
 
 export async function removeCharacter(character) {

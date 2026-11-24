@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
-import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionLabel } from "../characters"
+import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionLabel, publishCharacterAnnouncement } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl, uploadImage } from "../media"
 import ImageField from "./ImageField"
@@ -64,7 +64,15 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
         patch.portraitPublicId = ""
       }
       setStatus("檔案寫入中")
+      const firstSave = !character.name || character.name === "未命名"
       await updateDoc(doc(db, "characters", character.id), patch)
+      if (firstSave) {
+        try {
+          await publishCharacterAnnouncement({ id: character.id, name: nextName, fileNo, faction })
+        } catch {
+          // 檔案已儲存。公告寫入失敗時不撤回這次儲存。
+        }
+      }
       if (avatarFile) deleteStoredImage(character.avatarPublicId || publicIdFromUrl(character.avatarUrl))
       if (character.portraitUrl && portraitUrl !== character.portraitUrl) {
         deleteStoredImage(character.portraitPublicId || publicIdFromUrl(character.portraitUrl))

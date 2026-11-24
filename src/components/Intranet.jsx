@@ -78,24 +78,24 @@ export default function Intranet({ staff, onNotice }) {
       </button>
       {popup && (
         <div className="pointer-events-none absolute inset-x-0 top-4 z-10 flex justify-center px-24 sm:top-6">
-          <div className="announcement-pop w-[min(32rem,100%)] border border-white/20 bg-black px-4 py-3 text-center text-ink shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
+          <div className="announcement-pop w-[min(32rem,100%)] border border-white/20 bg-black px-4 py-3 text-center text-white shadow-[0_16px_40px_rgba(0,0,0,0.45)]">
             <p className="text-sm leading-6">{popup.text}</p>
-            <p className="mt-1 font-mono text-[10px] tracking-[0.14em] text-ash">{formatStamp(popup.createdAt)}</p>
+            <p className="mt-1 font-mono text-[10px] tracking-[0.14em] text-white">{formatStamp(popup.createdAt)}</p>
           </div>
         </div>
       )}
       {historyOpen && (
-        <div className="absolute top-16 right-4 z-20 max-h-[min(70dvh,28rem)] w-[min(22rem,calc(100%-2rem))] overflow-y-auto border border-white/15 bg-black p-4 text-ink sm:right-6">
-          <p className="font-mono text-[11px] tracking-[0.18em] text-ash">公告歷史</p>
+        <div className="absolute top-16 right-4 z-20 max-h-[min(70dvh,28rem)] w-[min(22rem,calc(100%-2rem))] overflow-y-auto border border-white/15 bg-black p-4 text-white sm:right-6">
+          <p className="font-mono text-[11px] tracking-[0.18em] text-white">公告歷史</p>
           {items.length === 0 ? (
-            <p className="mt-4 font-mono text-xs text-ash">尚無公告</p>
+            <p className="mt-4 font-mono text-xs text-white">尚無公告</p>
           ) : (
             <ul className="mt-3 divide-y divide-white/10">
               {items.map((item) => (
                 <li key={item.id} className="py-3">
-                  <p className="text-sm leading-6">{item.text}</p>
+                  <p className="text-sm leading-6 text-white">{item.text}</p>
                   <div className="mt-2 flex items-center justify-between gap-3">
-                    <p className="font-mono text-[10px] tracking-[0.12em] text-ash">{formatStamp(item.createdAt)}</p>
+                    <p className="font-mono text-[10px] tracking-[0.12em] text-white">{formatStamp(item.createdAt)}</p>
                     {staff && (
                       pendingDelete === item.id ? (
                         <button type="button" onClick={() => remove(item)} className="font-mono text-[11px] text-alert">

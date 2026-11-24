@@ -257,6 +257,7 @@ export default function App() {
     <div className="relative flex min-h-screen flex-col">
       <div className="scanlines" />
       <div className="scanbar" />
+      {page === "intranet" && <div className="vignette" />}
 
       {!booted && <BootScreen onDone={finishBoot} />}
 
