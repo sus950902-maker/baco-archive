@@ -127,7 +127,7 @@ export default function TopBar({
     <>
     <header
       ref={headerRef}
-      className="sticky top-0 z-40 border-b border-white/10 bg-black"
+      className="sticky top-0 z-40 border-b border-white/10 bg-black overscroll-none"
     >
       <div className="flex items-center justify-between gap-3 overflow-hidden border-b border-line px-4 py-2 sm:px-6">
         <p className="flex min-w-0 items-center gap-2 font-mono text-[11px] tracking-wide text-signal">

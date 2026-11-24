@@ -29,7 +29,7 @@ export default function SiteSections() {
         <section
           key={section.id}
           id={section.id}
-          className="mx-auto max-w-6xl scroll-mt-36 px-4 pb-40 sm:px-6 sm:pb-56"
+          className="mx-auto w-full max-w-6xl scroll-mt-36 px-4 pb-40 sm:px-6 sm:pb-56"
         >
           <div className="reveal-right mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>

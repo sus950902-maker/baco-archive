@@ -186,7 +186,15 @@ export async function claimCharacter(rawCode, user, profile) {
     error.code = "invalid"
     throw error
   }
+  const faction = lookup.data().faction || ""
   const characterRef = doc(db, "characters", lookup.data().characterId)
+  const held = await getDocs(query(collection(db, "characters"), where("ownerUid", "==", user.uid)))
+  const already = held.docs.some((entry) => entry.id !== characterRef.id && entry.data().status === "bound" && entry.data().faction === faction)
+  if (already) {
+    const error = new Error(`此帳號已綁定一個${faction}角色`)
+    error.code = "faction-full"
+    throw error
+  }
   try {
     await updateDoc(characterRef, {
       status: "bound",
