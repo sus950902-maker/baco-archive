@@ -136,7 +136,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
 
   if (!ready) {
     return (
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <h2 className="text-2xl font-medium sm:text-3xl">人員管理</h2>
         <p className="mt-4 font-mono text-xs tracking-wide text-ash">權限核對中</p>
       </section>
@@ -145,7 +145,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
 
   if (!staff) {
     return (
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+      <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
         <div className="reveal-right mb-5">
           <p className="font-mono text-[11px] tracking-[0.22em] text-comment">ROSTER ADMIN // RESTRICTED</p>
           <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員管理</h2>
@@ -198,7 +198,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
   })
 
   return (
-    <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
+    <section className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-24">
       <div className="reveal-right mb-5">
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">ROSTER ADMIN // BINDING CODES</p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員管理</h2>
