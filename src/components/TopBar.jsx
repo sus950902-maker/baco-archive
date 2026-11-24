@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Megaphone, Search } from "lucide-react"
+import { Lock, Megaphone, Search } from "lucide-react"
 import { matchClearance } from "../clearance"
 
 function formatStamp(date) {
@@ -18,7 +18,7 @@ const LINKS = [
 const DOMAIN_LINKS = [
   { href: "#intranet", page: "intranet", label: "內部網域" },
   { href: "#staff", page: "staff", label: "檔案庫" },
-  { href: "#staff-admin", page: "staff-admin", label: "人員管理", staffOnly: true, tone: "signal" },
+  { href: "#staff-admin", page: "staff-admin", label: "人員管理", staffOnly: true },
 ]
 
 function IdentityMark({ src, name }) {
@@ -65,6 +65,7 @@ export default function TopBar({
   const [searchValue, setSearchValue] = useState("")
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [confirmAdmin, setConfirmAdmin] = useState(false)
   const granting = useRef(false)
 
   useEffect(() => {
@@ -84,6 +85,21 @@ export default function TopBar({
     observer.observe(header)
     return () => observer.disconnect()
   }, [])
+
+  useEffect(() => {
+    if (!open) setConfirmAdmin(false)
+  }, [open])
+
+  useEffect(() => {
+    if (!confirmAdmin) return undefined
+    const onPointerDown = (event) => {
+      const node = event.target instanceof Element ? event.target : event.target.parentElement
+      if (node?.closest("[data-staff-admin]")) return
+      setConfirmAdmin(false)
+    }
+    document.addEventListener("pointerdown", onPointerDown)
+    return () => document.removeEventListener("pointerdown", onPointerDown)
+  }, [confirmAdmin])
 
   useEffect(() => {
     if (!open && !searchOpen) return undefined
@@ -332,17 +348,39 @@ export default function TopBar({
               <p className={`border-b border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment ${index === 0 ? "" : "mt-8 border-t"}`}>
                 INTERNAL DOMAIN
               </p>
-              {DOMAIN_LINKS.filter((link) => !link.staffOnly || staff).map((link) => (
+              {DOMAIN_LINKS.filter((link) => !link.staffOnly || staff).map((link) => {
+                const guarded = link.page === "staff-admin"
+                const armed = guarded && confirmAdmin
+                return (
                 <a
                   key={link.href}
                   href={link.href}
                   tabIndex={open ? 0 : -1}
-                  onClick={() => setOpen(false)}
-                  className={`block border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors ${link.tone === "signal" ? "bg-signal text-black hover:bg-signal/80" : `hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}`}
+                  data-staff-admin={guarded ? "" : undefined}
+                  onClick={(event) => {
+                    if (!guarded) {
+                      setConfirmAdmin(false)
+                      setOpen(false)
+                      return
+                    }
+                    if (!confirmAdmin) {
+                      event.preventDefault()
+                      setConfirmAdmin(true)
+                      return
+                    }
+                    setConfirmAdmin(false)
+                    setOpen(false)
+                  }}
+                  className={`flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors ${armed ? "bg-signal text-black" : `hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}`}
                 >
-                  {link.label}
+                  <span>
+                    {link.label}
+                    {armed && <span className="mt-1 block text-[11px] tracking-[0.14em]">是否進入</span>}
+                  </span>
+                  {guarded && <Lock className="h-4 w-4 shrink-0" aria-hidden="true" />}
                 </a>
-              ))}
+                )
+              })}
             </div>
           ),
         )}

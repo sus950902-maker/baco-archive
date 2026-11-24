@@ -12,7 +12,7 @@ function formatStamp(millis) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
 }
 
-const PAGE = 30
+const PAGE = 5
 
 function rowsFrom(docs) {
   return docs.filter((entry) => !entry.data().ephemeral).map((entry) => readAnnouncement(entry.id, entry.data()))
@@ -52,7 +52,7 @@ export default function AnnouncementHistory({ staff, onNotice }) {
       cursor.current = snap.docs[snap.docs.length - 1] || null
       setHasMore(snap.docs.length === PAGE)
     } catch (error) {
-      onNotice?.({ code: "ANNOUNCE // DENIED", message: error.message || "更早的公告讀取失敗" })
+      onNotice?.({ code: "ANNOUNCE // DENIED", message: error.message || "公告讀取失敗" })
     } finally {
       setLoadingOlder(false)
     }
@@ -127,8 +127,8 @@ export default function AnnouncementHistory({ staff, onNotice }) {
         </ul>
       )}
       {hasMore && (
-        <button type="button" disabled={loadingOlder} onClick={loadOlder} className="mt-6 border border-white/20 px-3 py-2 font-mono text-xs tracking-wide text-white hover:border-white disabled:opacity-40">
-          {loadingOlder ? "[ 讀取中 ]" : "[ 更早的公告 ]"}
+        <button type="button" disabled={loadingOlder} onClick={loadOlder} className="mx-auto mt-6 block border border-white/20 px-3 py-2 font-mono text-xs tracking-wide text-white hover:border-white disabled:opacity-40">
+          {loadingOlder ? "[ 讀取中 ]" : "[ 載入更多 ]"}
         </button>
       )}
     </section>
