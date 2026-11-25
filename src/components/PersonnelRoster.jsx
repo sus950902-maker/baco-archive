@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
 import { primeTouch } from "../primeTouch"
-import { characterTitle, claimCharacter, FACTION_COLOR, factionLabel } from "../characters"
+import { characterTitle, claimCharacter, FACTION_COLOR, factionHasDepartment, factionLabel } from "../characters"
 import PortraitArt from "./PortraitArt"
 
 const FILTERS = ["全部", "我的檔案", "調查員", "異常", "民眾", "議會"]
@@ -147,13 +147,11 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         <ul className="roster-grid grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
-              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card hud-corner relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] hover:border-black ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
-                <span className="character-edge" aria-hidden="true" />
+              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card character-sheet relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span className="character-logo-clip" aria-hidden="true">
                   <img src="/logo4.png" alt="" className="character-logo" />
                 </span>
-                <span className="character-base" aria-hidden="true" />
-                <span data-card-copy className="relative z-[1] flex w-full min-w-0 items-end gap-4 p-4">
+                <span data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-4 p-4">
                   {record.avatarUrl ? (
                     <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
                   ) : (
@@ -166,7 +164,9 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                     <span className="mt-1 block truncate font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[record.faction] || "#5c5854" }}>
                       {factionLabel(record)}
                     </span>
-                    <span className="mt-1 block truncate font-mono text-[11px] text-ash">{record.department}</span>
+                    <span className={`mt-1 block truncate font-mono text-[11px] text-ash ${factionHasDepartment(record.faction) ? "" : "invisible"}`} aria-hidden={factionHasDepartment(record.faction) ? undefined : true}>
+                      {factionHasDepartment(record.faction) ? record.department : "無 / 民間"}
+                    </span>
                     <span className="mt-2 block truncate font-mono text-[10px] tracking-[0.14em] text-ash">UID：{record.uid}</span>
                   </span>
                 </span>
@@ -176,6 +176,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                   scale={record.portraitScale}
                   frameClass=""
                 />
+                <span className="character-foot" aria-hidden="true" />
               </button>
             </li>
           ))}

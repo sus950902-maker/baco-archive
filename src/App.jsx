@@ -49,6 +49,10 @@ export default function App() {
   const [openCharacter, setOpenCharacter] = useState(null)
   const [editingCharacter, setEditingCharacter] = useState(null)
   const [staffEntry, setStaffEntry] = useState({ filter: "全部", token: 0 })
+  const role = isStaffRole(profile?.role) ? profile.role : profile?.role === "low" ? "low" : roleFromClearance(clearance)
+  const staff = isStaffRole(role)
+  const domainAccess = role === "low" || staff
+  const intranetHidden = authReady && (page === "intranet" || page === "announcements") && !domainAccess
 
   const finishBoot = useCallback(() => setBooted(true), [])
   useScrollReveal(booted)
@@ -64,19 +68,24 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    const hidden = authReady && !user && INTERNAL_PAGES.has(page)
+    const hidden = (authReady && !user && INTERNAL_PAGES.has(page)) || intranetHidden
     document.body.classList.toggle("page-dark", !hidden && (page === "intranet" || page === "announcements"))
     document.body.classList.toggle("page-roster", !hidden && page === "staff")
     return () => {
       document.body.classList.remove("page-dark")
       document.body.classList.remove("page-roster")
     }
-  }, [page, authReady, user])
+  }, [page, authReady, user, intranetHidden])
 
   useEffect(() => {
     if (!authReady || user || !INTERNAL_PAGES.has(page)) return
     window.location.hash = ""
   }, [authReady, user, page])
+
+  useEffect(() => {
+    if (!intranetHidden) return
+    window.location.hash = ""
+  }, [intranetHidden])
 
   useEffect(() => {
     if (page !== "staff" || staffEntry.filter === "全部") return
@@ -271,10 +280,8 @@ export default function App() {
     if (window.location.hash !== "#card") window.location.hash = "#card"
   }
 
-  const role = isStaffRole(profile?.role) ? profile.role : profile?.role === "low" ? "low" : roleFromClearance(clearance)
-  const staff = isStaffRole(role)
   const shownClearance = role === "admin" ? "high" : role === "moderator" ? "mid" : null
-  const view = authReady && !user && INTERNAL_PAGES.has(page) ? "archive" : page
+  const view = authReady && !user && INTERNAL_PAGES.has(page) ? "archive" : intranetHidden ? "archive" : page
 
   return (
     <div className="relative flex min-h-screen flex-col">
@@ -294,7 +301,8 @@ export default function App() {
         onEditProfile={() => setProfileOpen(true)}
         clearance={shownClearance}
         staff={staff}
-        domainFirst={role === "low" || role === "moderator" || role === "admin"}
+        domainFirst={domainAccess}
+        domainAccess={domainAccess}
         onSearch={searchProfiles}
         onGrantClearance={grantClearance}
         onViewProfile={setViewedProfile}
@@ -326,6 +334,9 @@ export default function App() {
               onSaved={(record) => {
                 setEditingCharacter(record)
                 setStaffEntry((current) => ({ filter: "我的檔案", token: current.token + 1 }))
+                if (window.location.hash !== "#staff") window.location.hash = "#staff"
+              }}
+              onCancel={() => {
                 if (window.location.hash !== "#staff") window.location.hash = "#staff"
               }}
             />

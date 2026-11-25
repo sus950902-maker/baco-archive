@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
-import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionLabel, publishCharacterAnnouncement } from "../characters"
+import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionHasDepartment, factionLabel, publishCharacterAnnouncement } from "../characters"
 import { db } from "../firebase"
 import { subscribeSiteControls, taipeiDay } from "../siteControls"
 import { deleteStoredImage, publicIdFromUrl, uploadImage } from "../media"
@@ -9,9 +9,10 @@ import PortraitField from "./PortraitField"
 
 const fieldClass = "mt-2 w-full border border-black/20 bg-white px-3 py-2 text-sm text-black outline-none focus:border-alert"
 
-export default function CharacterEditor({ character, staff = false, onNotice, onSaved }) {
+export default function CharacterEditor({ character, staff = false, onNotice, onSaved, onCancel }) {
   const [name, setName] = useState(character.name === "未命名" ? "" : character.name)
   const faction = character.faction
+  const hasDepartment = factionHasDepartment(faction)
   const [department, setDepartment] = useState(character.department || DEPARTMENTS[4])
   const [bio, setBio] = useState(character.bio || "")
   const [busy, setBusy] = useState(false)
@@ -56,10 +57,10 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
       const avatarFile = await avatarRef.current?.prepare()
       const patch = {
         name: nextName,
-        department,
         bio: bio.trim(),
         updatedAt: serverTimestamp(),
       }
+      if (hasDepartment) patch.department = department
       if (avatarFile) {
         setStatus("頭像上傳中")
         const uploaded = await uploadImage(avatarFile)
@@ -143,14 +144,16 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
         <p className="font-mono text-[11px] tracking-[0.16em] text-ash">
           陣營 // <span style={{ color: FACTION_COLOR[faction] || "#1a1a1a" }}>{faction}</span>
         </p>
-        <label className="font-mono text-[11px] tracking-[0.16em] text-ash">
-          所屬部門
-          <select value={department} disabled={busy} onChange={(event) => setDepartment(event.target.value)} className={fieldClass}>
-            {DEPARTMENTS.map((item) => (
-              <option key={item}>{item}</option>
-            ))}
-          </select>
-        </label>
+        {hasDepartment && (
+          <label className="font-mono text-[11px] tracking-[0.16em] text-ash">
+            所屬部門
+            <select value={department} disabled={busy} onChange={(event) => setDepartment(event.target.value)} className={fieldClass}>
+              {DEPARTMENTS.map((item) => (
+                <option key={item}>{item}</option>
+              ))}
+            </select>
+          </label>
+        )}
         <label className="font-mono text-[11px] tracking-[0.16em] text-ash">
           角色簡介
           <textarea value={bio} maxLength={600} disabled={busy} onChange={(event) => setBio(event.target.value)} className={`${fieldClass} min-h-24`} />
@@ -177,7 +180,9 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
             <span className="mt-1 block truncate font-mono text-[11px] tracking-wide" style={{ color: FACTION_COLOR[faction] || "#5c5854" }}>
               {factionLabel({ faction, fileNo })}
             </span>
-            <span className="mt-1 block truncate font-mono text-[11px] text-ash">{department}</span>
+            <span className={`mt-1 block truncate font-mono text-[11px] text-ash ${hasDepartment ? "" : "invisible"}`} aria-hidden={hasDepartment ? undefined : true}>
+              {hasDepartment ? department : "無 / 民間"}
+            </span>
             <span className="mt-2 block truncate font-mono text-[10px] tracking-[0.14em] text-ash">UID：{character.uid}</span>
           </span>
         </PortraitField>
@@ -186,9 +191,14 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
             {editCount < 5 ? `剩餘修改 ${5 - editCount} 次` : quotaBlocked ? "今日的修改次數已用完" : "今日可修改 1 次"}
           </p>
         )}
-        <button type="submit" disabled={busy || quotaBlocked} className="mx-auto w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">
-          [ 儲存檔案 ]
-        </button>
+        <div className="flex justify-center gap-3">
+          <button type="submit" disabled={busy || quotaBlocked} className="w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">
+            [ 儲存檔案 ]
+          </button>
+          <button type="button" disabled={busy} onClick={onCancel} className="w-fit border border-alert px-3 py-2 font-mono text-xs tracking-wide text-alert hover:bg-alert hover:text-white disabled:opacity-40">
+            [ 取消 ]
+          </button>
+        </div>
       </form>
     </section>
   )

@@ -127,9 +127,11 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
         <div className="mt-2 flex justify-center overflow-visible pt-16">
           <div className="roster-slot">
-            <div className="panel character-card hud-corner relative min-h-[var(--portrait-h)] overflow-visible pr-[var(--portrait-w)]">
-              <span className="character-edge" aria-hidden="true" />
-              <div className="flex w-full min-w-0 items-end gap-4 p-4">
+            <div className="panel character-card character-sheet relative min-h-[var(--portrait-h)] overflow-visible pr-[var(--portrait-w)]">
+              <span className="character-logo-clip" aria-hidden="true">
+                <img src="/logo4.png" alt="" className="character-logo" />
+              </span>
+              <div data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-4 p-4">
                 {children}
               </div>
               <div
@@ -170,9 +172,11 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
                   <span className="flex h-full items-center justify-center px-2 text-center font-mono text-[10px] text-ash">NO IMAGE</span>
                 )}
               </div>
+              <span className="character-foot" aria-hidden="true" />
             </div>
           </div>
         </div>
+        <p className="mt-3 text-center font-mono text-[10px] tracking-wide text-ash">點擊或將滑鼠移上可觸發動態效果</p>
       </div>
     </div>
   )

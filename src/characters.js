@@ -33,6 +33,10 @@ export const DEPARTMENTS = [
   "無 / 民間",
 ]
 
+export function factionHasDepartment(faction) {
+  return faction !== "異常" && faction !== "民眾"
+}
+
 export function isStaffRole(role) {
   return role === "moderator" || role === "admin"
 }

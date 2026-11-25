@@ -50,6 +50,7 @@ export default function TopBar({
   clearance,
   staff,
   domainFirst,
+  domainAccess,
   onLogin,
   onLogout,
   onEditProfile,
@@ -348,7 +349,7 @@ export default function TopBar({
               <p className={`border-b border-white/10 px-5 py-4 font-mono text-[11px] tracking-[0.22em] text-comment ${index === 0 ? "" : "mt-8 border-t"}`}>
                 INTERNAL DOMAIN
               </p>
-              {DOMAIN_LINKS.filter((link) => !link.staffOnly || staff).map((link) => {
+              {DOMAIN_LINKS.filter((link) => (!link.staffOnly || staff) && (link.page !== "intranet" || domainAccess)).map((link) => {
                 const guarded = link.page === "staff-admin"
                 const armed = guarded && confirmAdmin
                 return (

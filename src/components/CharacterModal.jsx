@@ -1,6 +1,6 @@
 import { useEffect } from "react"
 import { createPortal } from "react-dom"
-import { characterTitle, FACTION_COLOR, factionLabel } from "../characters"
+import { characterTitle, FACTION_COLOR, factionHasDepartment, factionLabel } from "../characters"
 import PortraitArt from "./PortraitArt"
 
 export default function CharacterModal({ character, user, staff, onClose, onEdit }) {
@@ -33,7 +33,8 @@ export default function CharacterModal({ character, user, staff, onClose, onEdit
               {characterTitle(character)}
             </h2>
             <p className="mt-2 font-mono text-[11px] tracking-[0.14em] text-ash">
-              {factionLabel(character)} // {character.department || "無 / 民間"}
+              {factionLabel(character)}
+              {factionHasDepartment(character.faction) ? ` // ${character.department || "無 / 民間"}` : ""}
             </p>
             {character.ownerName && <p className="mt-1 font-mono text-[11px] text-ash">持有者 // {character.ownerName}</p>}
           </div>
