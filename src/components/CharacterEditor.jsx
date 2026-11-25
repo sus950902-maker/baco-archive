@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from "react"
 import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
 import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionLabel, publishCharacterAnnouncement } from "../characters"
 import { db } from "../firebase"
+import { subscribeSiteControls, taipeiDay } from "../siteControls"
 import { deleteStoredImage, publicIdFromUrl, uploadImage } from "../media"
 import ImageField from "./ImageField"
 import PortraitField from "./PortraitField"
 
 const fieldClass = "mt-2 w-full border border-black/20 bg-white px-3 py-2 text-sm text-black outline-none focus:border-alert"
 
-export default function CharacterEditor({ character, onNotice, onSaved }) {
+export default function CharacterEditor({ character, staff = false, onNotice, onSaved }) {
   const [name, setName] = useState(character.name === "未命名" ? "" : character.name)
   const faction = character.faction
   const [department, setDepartment] = useState(character.department || DEPARTMENTS[4])
@@ -17,13 +18,23 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
   const [status, setStatus] = useState("")
   const [error, setError] = useState("")
   const [fileNo, setFileNo] = useState(character.fileNo || "")
+  const [editCount, setEditCount] = useState(0)
+  const [editDay, setEditDay] = useState("")
+  const [editQuota, setEditQuota] = useState(false)
   const avatarRef = useRef(null)
   const portraitRef = useRef(null)
+  const quotaOn = editQuota && !staff
+  const quotaBlocked = quotaOn && editCount >= 5 && editDay === taipeiDay()
+
+  useEffect(() => subscribeSiteControls((controls) => setEditQuota(controls.editQuota)), [])
 
   useEffect(() => {
     if (faction === "調查員" || faction === "異常") assignFileNumbers(faction).catch(() => {})
     return onSnapshot(doc(db, "characters", character.id), (snap) => {
-      setFileNo(snap.exists() ? snap.data().fileNo || "" : "")
+      const data = snap.exists() ? snap.data() : {}
+      setFileNo(data.fileNo || "")
+      setEditCount(data.editCount || 0)
+      setEditDay(data.editDay || "")
     })
   }, [character.id, faction])
 
@@ -32,6 +43,10 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
     const nextName = name.trim()
     if (!nextName) {
       setError("請填寫角色名稱")
+      return
+    }
+    if (quotaBlocked) {
+      setError("今日的修改次數已用完")
       return
     }
     setBusy(true)
@@ -65,6 +80,13 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
       }
       setStatus("檔案寫入中")
       const firstSave = !character.name || character.name === "未命名"
+      if (quotaOn) {
+        if (editCount < 5) patch.editCount = editCount + 1
+        else {
+          patch.editCount = editCount
+          patch.editDay = taipeiDay()
+        }
+      }
       await updateDoc(doc(db, "characters", character.id), patch)
       if (firstSave) {
         try {
@@ -159,7 +181,12 @@ export default function CharacterEditor({ character, onNotice, onSaved }) {
             <span className="mt-2 block truncate font-mono text-[10px] tracking-[0.14em] text-ash">UID：{character.uid}</span>
           </span>
         </PortraitField>
-        <button type="submit" disabled={busy} className="mx-auto w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">
+        {quotaOn && (
+          <p className="text-center font-mono text-[11px] tracking-wide text-ash">
+            {editCount < 5 ? `剩餘修改 ${5 - editCount} 次` : quotaBlocked ? "今日的修改次數已用完" : "今日可修改 1 次"}
+          </p>
+        )}
+        <button type="submit" disabled={busy || quotaBlocked} className="mx-auto w-fit border border-black px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-alert hover:text-alert disabled:opacity-40">
           [ 儲存檔案 ]
         </button>
       </form>

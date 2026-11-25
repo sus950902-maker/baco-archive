@@ -27,6 +27,36 @@ service cloud.firestore {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'clearanceHold', 'updatedAt']);
     }
 
+    function editQuotaOn() {
+      return exists(/databases/$(database)/documents/settings/controls)
+        && get(/databases/$(database)/documents/settings/controls).data.editQuota == true;
+    }
+
+    function keepsEditQuota() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['editCount', 'editDay']);
+    }
+
+    function twoDigits(value) {
+      return value < 10 ? '0' + string(value) : string(value);
+    }
+
+    function taipeiDay() {
+      let shifted = request.time + duration.value(8, 'h');
+      return string(shifted.year()) + '-' + twoDigits(shifted.month()) + '-' + twoDigits(shifted.day());
+    }
+
+    function quotaStep() {
+      let count = resource.data.get('editCount', 0);
+      let next = request.resource.data.editCount;
+      return (count < 5
+          && next == count + 1
+          && !request.resource.data.diff(resource.data).affectedKeys().hasAny(['editDay']))
+        || (count >= 5
+          && next == count
+          && request.resource.data.editDay == taipeiDay()
+          && resource.data.get('editDay', '') != taipeiDay());
+    }
+
     match /users/{userId} {
       allow read: if true;
       allow create: if signedIn() && request.auth.uid == userId
@@ -76,7 +106,9 @@ service cloud.firestore {
             && request.resource.data.bindCode == resource.data.bindCode
             && request.resource.data.uid == resource.data.uid
             && request.resource.data.fileNo == resource.data.fileNo
-            && request.resource.data.faction == resource.data.faction);
+            && request.resource.data.faction == resource.data.faction
+            && request.resource.data.status == 'bound'
+            && ((!editQuotaOn() && keepsEditQuota()) || (editQuotaOn() && quotaStep())));
       allow delete: if hasMidClearance();
     }
 
@@ -114,6 +146,33 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/characters/$(request.resource.data.characterId)).data.ownerUid == request.auth.uid;
       allow delete: if hasMidClearance();
       allow update: if false;
+    }
+
+    match /settings/{id} {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && id == 'controls'
+        && request.resource.data.keys().hasOnly(['rosterSnapshot', 'editQuota'])
+        && request.resource.data.rosterSnapshot is bool
+        && request.resource.data.editQuota is bool;
+      allow delete: if false;
+    }
+
+    match /snapshots/{id} {
+      allow read: if true;
+      allow create, update: if signedIn() && (
+        (id == 'rosterLock'
+          && request.resource.data.keys().hasOnly(['until'])
+          && request.resource.data.until is timestamp
+          && request.resource.data.until > request.time
+          && request.resource.data.until < request.time + duration.value(2, 'm'))
+        || (id == 'roster'
+          && request.resource.data.keys().hasOnly(['cards', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.cards is list
+          && request.resource.data.cards.size() <= 200)
+      );
+      allow delete: if false;
     }
 
     match /posts/{postId} {

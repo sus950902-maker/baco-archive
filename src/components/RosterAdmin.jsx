@@ -3,6 +3,7 @@ import { collection, doc, onSnapshot, serverTimestamp, updateDoc } from "firebas
 import { assignFileNumbers, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl } from "../media"
+import { subscribeSiteControls, writeSiteControls } from "../siteControls"
 
 export default function RosterAdmin({ staff, role, ready, onNotice }) {
   const [records, setRecords] = useState([])
@@ -15,12 +16,16 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
   const [error, setError] = useState("")
   const [pendingDelete, setPendingDelete] = useState("")
   const [councilCode, setCouncilCode] = useState("")
+  const [controls, setControls] = useState({ rosterSnapshot: false, editQuota: false })
+  const [controlBusy, setControlBusy] = useState(false)
 
   useEffect(() => {
     if (!ready || staff) return undefined
     onNotice({ code: "CLEARANCE // DENIED", message: "權限不足。本區僅限中級以上管理權限調閱。" })
     return undefined
   }, [ready, staff, onNotice])
+
+  useEffect(() => subscribeSiteControls(setControls), [])
 
   useEffect(() => {
     if (!staff) return undefined
@@ -77,6 +82,20 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
     })
     return undefined
   }, [staff, accounts, records])
+
+  async function toggleControl(key) {
+    if (role !== "admin" || controlBusy) return
+    const next = { ...controls, [key]: !controls[key] }
+    setControlBusy(true)
+    try {
+      await writeSiteControls(next)
+      setControls(next)
+    } catch (toggleError) {
+      onNotice({ code: "CONTROLS // DENIED", message: toggleError.message || "開關寫入失敗。請先發布 Firestore 規則。" })
+    } finally {
+      setControlBusy(false)
+    }
+  }
 
   async function generate() {
     setBusy(true)
@@ -203,6 +222,40 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
         <p className="font-mono text-[11px] tracking-[0.22em] text-comment">ROSTER ADMIN // BINDING CODES</p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">人員管理</h2>
       </div>
+      {role === "admin" && (
+        <div className="panel hud-corner mb-10 p-5 sm:p-6">
+          <p className="font-mono text-[11px] tracking-[0.22em] text-comment">SITE CONTROLS</p>
+          <h3 className="mt-2 text-xl font-medium">站點開關</h3>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm">10 分鐘快照</p>
+              <p className="mt-1 font-mono text-[11px] leading-5 text-ash">開啟後，檔案庫改讀共用名單。有人正在查看時，約每 10 分鐘更新一次。</p>
+            </div>
+            <button
+              type="button"
+              disabled={controlBusy}
+              onClick={() => toggleControl("rosterSnapshot")}
+              className={`shrink-0 border px-3 py-2 font-mono text-xs tracking-wide disabled:opacity-40 ${controls.rosterSnapshot ? "border-signal bg-signal text-black" : "border-black text-ink"}`}
+            >
+              {controls.rosterSnapshot ? "[ 開啟中 ]" : "[ 已關閉 ]"}
+            </button>
+          </div>
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-t border-black/10 pt-6">
+            <div className="min-w-0">
+              <p className="text-sm">修改次數</p>
+              <p className="mt-1 font-mono text-[11px] leading-5 text-ash">開啟後，每張角卡先可修改 5 次。用完後，每個台北日可再改 1 次。</p>
+            </div>
+            <button
+              type="button"
+              disabled={controlBusy}
+              onClick={() => toggleControl("editQuota")}
+              className={`shrink-0 border px-3 py-2 font-mono text-xs tracking-wide disabled:opacity-40 ${controls.editQuota ? "border-signal bg-signal text-black" : "border-black text-ink"}`}
+            >
+              {controls.editQuota ? "[ 開啟中 ]" : "[ 已關閉 ]"}
+            </button>
+          </div>
+        </div>
+      )}
       <div className="panel hud-corner relative p-5 sm:p-6">
         <aside className="mb-4 flex flex-col items-end gap-3 sm:absolute sm:top-6 sm:right-6 sm:mb-0">
           <button

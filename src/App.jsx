@@ -321,6 +321,7 @@ export default function App() {
             <CharacterEditor
               key={editingCharacter.id}
               character={editingCharacter}
+              staff={staff}
               onNotice={pushNotice}
               onSaved={(record) => {
                 setEditingCharacter(record)
