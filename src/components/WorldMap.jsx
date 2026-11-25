@@ -3,7 +3,7 @@ import { MAP_FRAME, WORLD_LAND } from "./worldLand"
 export default function WorldMap() {
   const { width, height } = MAP_FRAME
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="世界地圖" className="block h-auto w-full">
+    <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label="世界地圖" className="mt-10 block h-auto w-full sm:mt-14">
       <path
         d={WORLD_LAND}
         fill="#1c1c1c"
