@@ -169,9 +169,9 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
           disabled={busy}
         >
           {character.avatarUrl ? (
-            <img src={character.avatarUrl} alt="" className="aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 object-cover" />
+            <img src={character.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover max-sm:w-[clamp(2.25rem,20cqw,4rem)]" />
           ) : (
-            <span className="flex aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
+            <span className="flex aspect-[7/9] w-16 shrink-0 items-center justify-center bg-black font-mono text-xs text-white max-sm:w-[clamp(2.25rem,20cqw,4rem)]">
               {(name || character.name || "?").slice(0, 1)}
             </span>
           )}

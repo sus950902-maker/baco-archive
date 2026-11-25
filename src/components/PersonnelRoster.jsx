@@ -113,8 +113,8 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         {error && <p className="mt-3 font-mono text-[11px] text-alert">{error}</p>}
       </form>
 
-      <div className="mt-6 flex flex-col gap-2">
-        <div className="flex gap-1 sm:gap-2">
+      <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+        <div className="flex gap-1 sm:contents sm:gap-2">
           {FILTERS.map((item) => (
             <button
               key={item}
@@ -123,7 +123,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                 setFilter(item)
                 setEntrance((current) => current + 1)
               }}
-              className={`min-w-0 flex-1 whitespace-nowrap border px-1 py-1.5 text-center font-mono text-[clamp(0.58rem,2.45vw,0.75rem)] tracking-wide sm:px-3 ${filter === item ? "border-black bg-black text-white" : "border-black/20 bg-white text-ink"}`}
+              className={`min-w-0 flex-1 whitespace-nowrap border px-1 py-1.5 text-center font-mono text-[clamp(0.58rem,2.45vw,0.75rem)] tracking-wide sm:flex-none sm:px-3 sm:text-xs ${filter === item ? "border-black bg-black text-white" : "border-black/20 bg-white text-ink"}`}
             >
               {item}
             </button>
@@ -154,11 +154,11 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                 <span className="character-logo-clip" aria-hidden="true">
                   <img src="/logo4.png" alt="" className="character-logo" />
                 </span>
-                <span data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-[clamp(0.5rem,3cqw,1rem)] p-[clamp(0.6rem,3.5cqw,1rem)]">
+                <span data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-4 p-4 max-sm:gap-[clamp(0.5rem,3cqw,1rem)] max-sm:p-[clamp(0.6rem,3.5cqw,1rem)]">
                   {record.avatarUrl ? (
-                    <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 object-cover" />
+                    <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover max-sm:w-[clamp(2.25rem,20cqw,4rem)]" />
                   ) : (
-                    <span className="flex aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
+                    <span className="flex aspect-[7/9] w-16 shrink-0 items-center justify-center bg-black font-mono text-xs text-white max-sm:w-[clamp(2.25rem,20cqw,4rem)]">
                       {(record.name || "?").slice(0, 1)}
                     </span>
                   )}

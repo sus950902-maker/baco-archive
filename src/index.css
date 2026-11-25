@@ -135,20 +135,31 @@ body {
 
 .roster-section {
   width: 100%;
-  max-width: 100%;
   container-type: inline-size;
 }
 
 .roster-slot {
   width: 100%;
   max-width: 100%;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .roster-slot {
+    max-width: calc((100cqw - 1rem) / 2);
+  }
+}
+
+@media (min-width: 1024px) {
+  .roster-slot {
+    max-width: calc((100cqw - 2rem) / 3);
+  }
 }
 
 .roster-grid {
   width: 100%;
   min-width: 0;
-  overflow: clip;
-  overflow-clip-margin: 2.75rem 2.5rem 2.5rem 2.5rem;
+  overflow: visible;
 }
 
 .roster-dark {
@@ -345,12 +356,17 @@ main .text-comment {
 }
 
 .character-shadow {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  container-type: inline-size;
   filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.28));
   transition: filter 0.2s ease-out;
+}
+
+@media (max-width: 639px) {
+  .character-shadow {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    container-type: inline-size;
+  }
 }
 
 .character-shadow:hover,
@@ -408,9 +424,16 @@ main .text-comment {
 }
 
 .character-sheet {
-  --portrait-w: clamp(4.25rem, 40cqw, 8.75rem);
-  --portrait-bleed: clamp(0.35rem, 4cqw, 1rem);
-  --card-foot: clamp(0.85rem, 6cqw, 1.25rem);
+  --card-foot: 1.25rem;
+  --portrait-bleed: 1rem;
+}
+
+@media (max-width: 639px) {
+  .character-sheet {
+    --portrait-w: clamp(4.25rem, 40cqw, 8.75rem);
+    --portrait-bleed: clamp(0.35rem, 4cqw, 1rem);
+    --card-foot: clamp(0.85rem, 6cqw, 1.25rem);
+  }
 }
 
 .character-sheet.character-card {

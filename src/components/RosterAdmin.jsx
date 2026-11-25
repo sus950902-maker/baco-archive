@@ -177,30 +177,9 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
     )
   }
 
-  const owners = new Set(records.filter((record) => record.status === "bound" && record.ownerUid).map((record) => record.ownerUid))
   const accountNames = new Map(accounts.map((account) => [account.id, account.displayName || ""]))
-  const accountById = new Map(accounts.map((account) => [account.id, account]))
   const highAccounts = accounts.filter((account) => account.role === "admin")
   const midAccounts = accounts.filter((account) => account.role === "moderator")
-  const lowAccounts = []
-  const seenLow = new Set()
-  function addLow(account) {
-    if (!account?.id || seenLow.has(account.id) || account.role === "admin" || account.role === "moderator") return
-    seenLow.add(account.id)
-    lowAccounts.push(account)
-  }
-  accounts.forEach((account) => {
-    if (account.role === "low" || owners.has(account.id)) addLow(account)
-  })
-  owners.forEach((ownerUid) => {
-    const account = accountById.get(ownerUid)
-    if (account) {
-      addLow(account)
-      return
-    }
-    const named = records.find((record) => record.ownerUid === ownerUid && record.ownerName)
-    addLow({ id: ownerUid, displayName: named?.ownerName || "未命名", publicUid: "", email: "" })
-  })
   const counts = Object.fromEntries(FACTIONS.map((item) => [item, records.filter((record) => record.faction === item).length]))
   const visible = records.filter((record) => record.faction === faction).sort((left, right) => {
     const leftNo = Number(left.fileNo)
@@ -416,21 +395,6 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
         )}
         <p className="mt-8 font-mono text-[11px] tracking-[0.16em] text-ash">低級權限</p>
         <p className="mt-2 font-mono text-[11px] text-ash">擁有角色卡的帳號自動具有低級權限。</p>
-        {lowAccounts.length === 0 ? (
-          <p className="mt-3 font-mono text-xs text-ash">尚無低級權限帳號</p>
-        ) : (
-          <ul className="mt-3 divide-y divide-black/10">
-            {lowAccounts.map((account) => (
-              <li key={account.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                <span className="min-w-0">
-                  <span className="block truncate text-sm">{account.displayName || "未命名"}</span>
-                  <span className="mt-1 block font-mono text-[11px] tracking-[0.14em] text-ash">{account.publicUid || account.email || account.id}</span>
-                </span>
-                <span className="font-mono text-[11px] tracking-[0.14em] text-ash">低級</span>
-              </li>
-            ))}
-          </ul>
-        )}
       </div>
     </section>
   )
