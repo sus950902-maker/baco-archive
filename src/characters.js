@@ -190,13 +190,13 @@ export async function claimCharacter(rawCode, user, profile) {
     error.code = "invalid"
     throw error
   }
-  const faction = lookup.data().faction || ""
   const characterRef = doc(db, "characters", lookup.data().characterId)
   const held = await getDocs(query(collection(db, "characters"), where("ownerUid", "==", user.uid)))
-  const already = held.docs.some((entry) => entry.id !== characterRef.id && entry.data().status === "bound" && entry.data().faction === faction)
-  if (already) {
-    const error = new Error(`此帳號已綁定一個${faction}角色`)
-    error.code = "faction-full"
+  const limit = profile?.role === "admin" ? Infinity : profile?.role === "moderator" ? 4 : 3
+  const boundCount = held.docs.filter((entry) => entry.id !== characterRef.id && entry.data().status === "bound").length
+  if (boundCount >= limit) {
+    const error = new Error(limit === 4 ? "中級權限最多綁定 4 張角卡" : "每個帳號最多綁定 3 張角卡")
+    error.code = "bind-full"
     throw error
   }
   try {
