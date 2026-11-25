@@ -18,6 +18,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
   const [councilCode, setCouncilCode] = useState("")
   const [controls, setControls] = useState({ rosterSnapshot: false, editQuota: false })
   const [controlBusy, setControlBusy] = useState(false)
+  const [controlsOpen, setControlsOpen] = useState(true)
 
   useEffect(() => {
     if (!ready || staff) return undefined
@@ -224,8 +225,22 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
       </div>
       {role === "admin" && (
         <div className="panel hud-corner mb-10 p-5 sm:p-6">
-          <p className="font-mono text-[11px] tracking-[0.22em] text-comment">SITE CONTROLS</p>
-          <h3 className="mt-2 text-xl font-medium">站點開關</h3>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="font-mono text-[11px] tracking-[0.22em] text-comment">SYSTEM // SETTINGS</p>
+              <h3 className="mt-2 text-xl font-medium">系統設置</h3>
+            </div>
+            <button
+              type="button"
+              aria-expanded={controlsOpen}
+              onClick={() => setControlsOpen((open) => !open)}
+              className="shrink-0 border border-black/20 px-3 py-2 font-mono text-xs tracking-wide text-ink hover:border-black"
+            >
+              {controlsOpen ? "[ 收起 ]" : "[ 展開 ]"}
+            </button>
+          </div>
+          <div className={`fold ${controlsOpen ? "is-open" : ""}`}>
+          <div>
           <div className="mt-6 flex flex-wrap items-center justify-between gap-4">
             <div className="min-w-0">
               <p className="text-sm">10 分鐘快照</p>
@@ -253,6 +268,8 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
             >
               {controls.editQuota ? "[ 開啟中 ]" : "[ 已關閉 ]"}
             </button>
+          </div>
+          </div>
           </div>
         </div>
       )}
