@@ -127,6 +127,7 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
         <div className="mt-2 flex justify-center overflow-visible pt-16">
           <div className="roster-slot">
+            <div className="character-shadow">
             <div className="panel character-card character-sheet relative min-h-[var(--portrait-h)] overflow-visible pr-[var(--portrait-w)]">
               <span className="character-logo-clip" aria-hidden="true">
                 <img src="/logo4.png" alt="" className="character-logo" />
@@ -173,6 +174,7 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
                 )}
               </div>
               <span className="character-foot" aria-hidden="true" />
+            </div>
             </div>
           </div>
         </div>

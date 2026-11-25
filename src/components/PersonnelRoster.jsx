@@ -147,6 +147,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         <ul className="roster-grid grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
+              <div className="character-shadow">
               <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card character-sheet relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span className="character-logo-clip" aria-hidden="true">
                   <img src="/logo4.png" alt="" className="character-logo" />
@@ -178,6 +179,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
                 />
                 <span className="character-foot" aria-hidden="true" />
               </button>
+              </div>
             </li>
           ))}
         </ul>
