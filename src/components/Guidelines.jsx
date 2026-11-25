@@ -58,7 +58,7 @@ function TypedBody({ text, active }) {
   const shown = text.slice(0, active ? count : text.length)
 
   return (
-    <p className="relative mt-3 font-[450] leading-7 text-ash transition-colors duration-300 group-hover:text-black group-focus-within:text-black">
+    <p className="relative mt-3 text-sm font-[450] leading-6 text-ash transition-colors duration-300 group-hover:text-black group-focus-within:text-black sm:text-base sm:leading-7">
       <span className="invisible">{text}</span>
       <span className="absolute inset-0">{shown}</span>
     </p>
@@ -84,26 +84,26 @@ export default function Guidelines() {
   }
 
   return (
-    <section id="guidelines" className="mx-auto max-w-6xl scroll-mt-36 px-4 pb-40 sm:px-6 sm:pb-56">
-      <div className="reveal-right mb-5 flex flex-wrap items-end justify-between gap-3">
+    <section id="guidelines" className="mx-auto max-w-6xl scroll-mt-36 px-4 pb-16 sm:px-6 sm:pb-56">
+      <div className="reveal-right mb-4 flex flex-wrap items-end justify-between gap-2 sm:mb-5 sm:gap-3">
         <div>
-          <p className="font-mono text-[11px] tracking-[0.28em] text-comment">SECTOR 02 // PROTOCOL</p>
-          <h2 className="mt-2 text-2xl font-medium text-ink sm:text-3xl">企劃玩法</h2>
+          <p className="font-mono text-[10px] tracking-[0.16em] text-comment sm:text-[11px] sm:tracking-[0.28em]">SECTOR 02 // PROTOCOL</p>
+          <h2 className="mt-2 text-xl font-medium text-ink sm:text-3xl">企劃玩法</h2>
         </div>
-        <p className="font-mono text-[11px] text-ash">FILE LOCK: READ ONLY // GUEST</p>
+        <p className="font-mono text-[10px] text-ash sm:text-[11px]">FILE LOCK: READ ONLY // GUEST</p>
       </div>
 
-      <div className="reveal-right panel hud-corner mb-6 p-5 sm:p-8">
-        <p className="font-mono text-[11px] tracking-[0.22em] text-ash">PLAY OVERVIEW // 玩法概述</p>
-        <p className="mt-4 max-w-3xl text-base font-[450] leading-8 text-ink sm:text-[17px]">
+      <div className="reveal-right panel hud-corner mb-4 p-4 sm:mb-6 sm:p-8">
+        <p className="font-mono text-[10px] tracking-[0.16em] text-ash sm:text-[11px] sm:tracking-[0.22em]">PLAY OVERVIEW // 玩法概述</p>
+        <p className="mt-3 max-w-3xl text-sm font-[450] leading-7 text-ink sm:mt-4 sm:text-[17px] sm:leading-8">
           在脆弱的現實防線下，你可以選擇成為破壞規則、引發混亂的異常；挺身封鎖災變、時刻處在死亡邊緣的調查員；或是生活在日常秩序中，卻意外捲入事件的民眾...
         </p>
       </div>
 
-      <div id="guidelines-panel" className="panel hud-corner p-5 sm:p-7">
-        <div className="space-y-4">
-          <p className="font-mono text-[11px] tracking-[0.22em] text-ash">FACTION INDEX // 陣營</p>
-          <div ref={cardsRef} className="grid gap-3">
+      <div id="guidelines-panel" className="panel hud-corner p-4 sm:p-7">
+        <div className="space-y-3 sm:space-y-4">
+          <p className="font-mono text-[10px] tracking-[0.16em] text-ash sm:text-[11px] sm:tracking-[0.22em]">FACTION INDEX // 陣營</p>
+          <div ref={cardsRef} className="grid gap-2 sm:gap-3">
             {FACTIONS.map((faction) => {
               const Icon = faction.icon
               const open = openId === faction.id
@@ -126,18 +126,18 @@ export default function Guidelines() {
                     }}
                     className={`faction-card group flex cursor-pointer items-stretch rounded-sm border text-left ${open ? "is-open" : ""}`}
                   >
-                    <div className="faction-swatch relative z-10 flex w-12 min-h-12 shrink-0 items-center justify-center self-stretch">
-                      <Icon className="h-6 w-6 text-white" aria-hidden="true" />
+                    <div className="faction-swatch relative z-10 flex w-10 min-h-10 shrink-0 items-center justify-center self-stretch sm:w-12 sm:min-h-12">
+                      <Icon className="h-5 w-5 text-white sm:h-6 sm:w-6" aria-hidden="true" />
                     </div>
-                    <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-4 py-2 sm:px-5">
-                      <h4 className="faction-tone text-lg font-bold">{faction.name}</h4>
+                    <div className="relative z-10 flex min-w-0 flex-1 flex-col justify-center px-3 py-2 sm:px-5">
+                      <h4 className="faction-tone text-base font-bold sm:text-lg">{faction.name}</h4>
                       <div className={`faction-expand ${open ? "is-open" : ""}`} aria-hidden={!open}>
                         <div>
                           {faction.role && (
                             <p className="faction-tone mt-1 font-mono text-[11px] tracking-wide">{faction.role}</p>
                           )}
                           {faction.id === "anomaly" ? (
-                            <div className="mt-3 font-[450] leading-7 text-ash transition-colors duration-300 group-hover:text-black group-focus-within:text-black">
+                            <div className="mt-3 text-sm font-[450] leading-6 text-ash transition-colors duration-300 group-hover:text-black group-focus-within:text-black sm:text-base sm:leading-7">
                               <p>
                                 透過繪製並上傳<span className="font-bold">『異常災害』</span>
                                 作品展現異常能力與擴大影響。若名下災害事件被全數被解決（威脅分數歸0），將進入

@@ -27,7 +27,7 @@ function IdentityMark({ src, name }) {
 
   return (
     <span
-      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden bg-panel font-mono text-xs text-ink"
+      className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden bg-panel font-mono text-[10px] text-ink sm:h-8 sm:w-8 sm:text-xs"
       style={{ clipPath: "polygon(0 0, calc(100% - 7px) 0, 100% 7px, 100% 100%, 7px 100%, 0 calc(100% - 7px))" }}
     >
       {src && !failed ? (
@@ -40,7 +40,7 @@ function IdentityMark({ src, name }) {
 }
 
 const actionClass =
-  "shrink-0 border border-line bg-panel px-3 py-2 font-mono text-xs tracking-wide whitespace-nowrap text-ink transition-colors hover:border-alert hover:text-alert focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert disabled:opacity-40"
+  "shrink-0 border border-line bg-panel px-2 py-1.5 font-mono text-[10px] tracking-wide whitespace-nowrap text-ink transition-colors hover:border-alert hover:text-alert focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert disabled:opacity-40 sm:px-3 sm:py-2 sm:text-xs"
 
 export default function TopBar({
   page,
@@ -163,12 +163,12 @@ export default function TopBar({
       ref={headerRef}
       className="sticky top-0 z-40 border-b border-white/10 bg-black overscroll-none"
     >
-      <div className="flex items-center justify-between gap-3 overflow-hidden border-b border-line px-4 py-2 sm:px-6">
-        <p className="flex min-w-0 items-center gap-2 font-mono text-[11px] tracking-wide text-signal">
-          <span className="inline-block h-2 w-2 shrink-0 rounded-full bg-signal text-signal animate-led" />
+      <div className="hidden items-center justify-between gap-3 overflow-hidden border-b border-line px-4 py-2 sm:flex sm:px-6">
+        <p className="flex min-w-0 items-center gap-1.5 font-mono text-[10px] tracking-wide text-signal sm:gap-2 sm:text-[11px]">
+          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-signal text-signal animate-led sm:h-2 sm:w-2" />
           <span className="truncate">連線狀態：SECURE // CHANNEL-04</span>
         </p>
-        <div className="flex shrink-0 items-center gap-3 font-mono text-[11px] text-ash">
+        <div className="flex shrink-0 items-center gap-2 font-mono text-[10px] text-ash sm:gap-3 sm:text-[11px]">
           <span className="hidden truncate sm:inline">
             <span className="hidden lg:inline">SYSTEM: INTERNAL ARCHIVE // </span>
             {clearance === "high"
@@ -185,31 +185,31 @@ export default function TopBar({
         </div>
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 sm:px-6">
-        <div className="flex min-w-0 flex-1 items-center gap-3">
+      <div className="flex min-w-0 flex-wrap items-center justify-between gap-x-2 gap-y-1.5 px-3 py-2 sm:gap-x-3 sm:gap-y-2 sm:px-6 sm:py-3">
+        <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
           <button
             type="button"
             aria-expanded={open}
             aria-controls="archive-menu"
             onClick={() => setOpen((value) => !value)}
-            className="flex h-11 w-11 shrink-0 flex-col items-center justify-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert"
+            className="flex h-9 w-9 shrink-0 flex-col items-center justify-center gap-1 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert sm:h-11 sm:w-11 sm:gap-1.5"
           >
             <span className="sr-only">{open ? "關閉選單" : "開啟選單"}</span>
-            <span className={`block h-0.5 w-5 bg-ash transition-transform ${open ? "translate-y-[8px] rotate-45" : ""}`} />
-            <span className={`block h-0.5 w-5 bg-ash transition-opacity ${open ? "opacity-0" : ""}`} />
-            <span className={`block h-0.5 w-5 bg-ash transition-transform ${open ? "-translate-y-[8px] -rotate-45" : ""}`} />
+            <span className={`block h-0.5 w-4 bg-ash transition-transform sm:w-5 ${open ? "translate-y-[6px] rotate-45 sm:translate-y-[8px]" : ""}`} />
+            <span className={`block h-0.5 w-4 bg-ash transition-opacity sm:w-5 ${open ? "opacity-0" : ""}`} />
+            <span className={`block h-0.5 w-4 bg-ash transition-transform sm:w-5 ${open ? "-translate-y-[6px] -rotate-45 sm:-translate-y-[8px]" : ""}`} />
           </button>
-          <a href="#overview" className="flex min-w-0 items-center gap-3">
+          <a href="#overview" className="flex min-w-0 items-center gap-2 sm:gap-3">
           <img
             src="/logo.png"
             alt="異常收容與觀測調查局｜B.A.C.O."
-            className="h-11 w-auto shrink-0 object-contain"
+            className="h-8 w-auto shrink-0 object-contain sm:h-11"
           />
           <span className="min-w-0">
-            <span className="block truncate text-sm font-medium tracking-wide text-ink sm:text-base">
+            <span className="block truncate text-xs font-medium tracking-wide text-ink sm:text-base">
               異常收容與觀測調查局｜B.A.C.O.
             </span>
-            <span className="block truncate font-mono text-[10px] tracking-[0.22em] text-ash">
+            <span className="block truncate font-mono text-[9px] tracking-[0.14em] text-ash sm:text-[10px] sm:tracking-[0.22em]">
               OBSERVATION SEAL // CONTAINMENT LOCK
             </span>
           </span>
@@ -217,7 +217,7 @@ export default function TopBar({
         </div>
 
         {user ? (
-          <div className="flex max-w-full flex-wrap items-center justify-end gap-2">
+          <div className="flex max-w-full flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             <IdentityMark
               key={profile?.avatarUrl || user.photoURL || "mark"}
               src={profile?.avatarUrl || user.photoURL || ""}
@@ -241,14 +241,24 @@ export default function TopBar({
                 setSearchOpen((value) => !value)
                 setResults([])
               }}
-              className={`${actionClass} px-2`}
+              className={`${actionClass} px-1.5 sm:px-2`}
             >
-              <Search className="h-4 w-4" aria-hidden="true" />
+              <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4" aria-hidden="true" />
             </button>
           </div>
         ) : (
           <button type="button" onClick={onLogin} disabled={!authReady} className={actionClass}>
-            {authReady ? "[ 接入終端 // GOOGLE 驗證 ]" : "[ 接入終端 // 連線中 ]"}
+            {authReady ? (
+              <>
+                <span className="sm:hidden">[ 接入終端 ]</span>
+                <span className="hidden sm:inline">[ 接入終端 // GOOGLE 驗證 ]</span>
+              </>
+            ) : (
+              <>
+                <span className="sm:hidden">[ 連線中 ]</span>
+                <span className="hidden sm:inline">[ 接入終端 // 連線中 ]</span>
+              </>
+            )}
           </button>
         )}
       </div>
