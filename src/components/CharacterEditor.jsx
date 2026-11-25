@@ -130,7 +130,7 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
         </p>
         <h2 className="mt-2 text-2xl font-medium sm:text-3xl">編輯角色卡</h2>
       </div>
-      <form onSubmit={save} className="panel hud-corner grid gap-4 p-5 sm:p-6">
+      <form onSubmit={save} className="panel hud-corner grid min-w-0 max-w-full gap-4 p-5 sm:p-6">
         <div className="grid items-end gap-4 sm:grid-cols-[minmax(0,1fr)_9rem]">
           <label className="font-mono text-[11px] tracking-[0.16em] text-ash">
             角色名稱
@@ -169,9 +169,9 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
           disabled={busy}
         >
           {character.avatarUrl ? (
-            <img src={character.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
+            <img src={character.avatarUrl} alt="" className="aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 object-cover" />
           ) : (
-            <span className="flex aspect-[7/9] w-16 shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
+            <span className="flex aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
               {(name || character.name || "?").slice(0, 1)}
             </span>
           )}

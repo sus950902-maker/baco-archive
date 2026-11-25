@@ -82,9 +82,9 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap items-end gap-3">
-        <label className="min-w-48 flex-1 font-mono text-[11px] tracking-[0.16em] text-ash">
+    <div className="min-w-0 max-w-full">
+      <div className="flex min-w-0 flex-wrap items-end gap-3">
+        <label className="min-w-0 flex-1 font-mono text-[11px] tracking-[0.16em] text-ash">
           雲端網址
           <input
             value={link}
@@ -117,7 +117,7 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
               setZoom(nextZoom)
               setOffset(clampPortrait(centerX - upcoming.width / 2, centerY - upcoming.height / 2, frame, upcoming))
             }}
-            className="mt-2 block w-full accent-alert"
+            className="mt-2 block w-full max-w-full accent-alert"
           />
         </label>
       )}
@@ -125,14 +125,14 @@ const PortraitField = forwardRef(function PortraitField({ existingUrl = "", rati
       {error && <p className="mt-2 font-mono text-[11px] text-alert">{error}</p>}
       <div>
         <p className="text-center font-mono text-[11px] tracking-[0.16em] text-ash">角色卡預覽</p>
-        <div className="mt-2 flex justify-center overflow-visible pt-16">
-          <div className="roster-slot">
+        <div className="mt-2 flex min-w-0 justify-center overflow-visible pt-16">
+          <div className="roster-slot min-w-0">
             <div className="character-shadow">
-            <div className="panel character-card character-sheet relative min-h-[var(--portrait-h)] overflow-visible pr-[var(--portrait-w)]">
+            <div className="panel character-card character-sheet relative min-h-[var(--portrait-h)] w-full min-w-0 max-w-full overflow-visible pr-[var(--portrait-w)]">
               <span className="character-logo-clip" aria-hidden="true">
                 <img src="/logo4.png" alt="" className="character-logo" />
               </span>
-              <div data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-4 p-4">
+              <div data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-[clamp(0.5rem,3cqw,1rem)] p-[clamp(0.6rem,3.5cqw,1rem)]">
                 {children}
               </div>
               <div

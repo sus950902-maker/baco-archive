@@ -113,26 +113,28 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         {error && <p className="mt-3 font-mono text-[11px] text-alert">{error}</p>}
       </form>
 
-      <div className="mt-6 flex flex-wrap items-center gap-2">
-        {FILTERS.map((item) => (
-          <button
-            key={item}
-            type="button"
-            onClick={() => {
-              setFilter(item)
-              setEntrance((current) => current + 1)
-            }}
-            className={`border px-3 py-1.5 font-mono text-xs tracking-wide ${filter === item ? "border-black bg-black text-white" : "border-black/20 bg-white text-ink"}`}
-          >
-            {item}
-          </button>
-        ))}
+      <div className="mt-6 flex flex-col gap-2">
+        <div className="flex gap-1 sm:gap-2">
+          {FILTERS.map((item) => (
+            <button
+              key={item}
+              type="button"
+              onClick={() => {
+                setFilter(item)
+                setEntrance((current) => current + 1)
+              }}
+              className={`min-w-0 flex-1 whitespace-nowrap border px-1 py-1.5 text-center font-mono text-[clamp(0.58rem,2.45vw,0.75rem)] tracking-wide sm:px-3 ${filter === item ? "border-black bg-black text-white" : "border-black/20 bg-white text-ink"}`}
+            >
+              {item}
+            </button>
+          ))}
+        </div>
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="搜索名稱或編號"
           aria-label="搜索名稱或編號"
-          className="ml-auto w-full border border-black/20 bg-white px-3 py-1.5 font-mono text-xs text-black outline-none focus:border-alert sm:w-52"
+          className="w-full min-w-0 border border-black/20 bg-white px-3 py-1.5 font-mono text-xs text-black outline-none focus:border-alert sm:ml-auto sm:w-52"
         />
       </div>
 
@@ -144,19 +146,19 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           {needle ? "沒有符合的檔案" : filter === "我的檔案" ? (user ? "尚無你的檔案" : "請先接入終端後再查看我的檔案。") : "尚無已綁定人員"}
         </p>
       ) : (
-        <ul className="roster-grid grid gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="roster-grid grid min-w-0 gap-x-4 gap-y-10 pt-10 pr-3 pb-3 pl-3 sm:grid-cols-2 lg:grid-cols-3">
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
               <div className="character-shadow">
-              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card character-sheet relative w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
+              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card character-sheet relative w-full min-w-0 max-w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span className="character-logo-clip" aria-hidden="true">
                   <img src="/logo4.png" alt="" className="character-logo" />
                 </span>
-                <span data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-4 p-4">
+                <span data-card-copy className="relative z-[4] flex w-full min-w-0 items-end gap-[clamp(0.5rem,3cqw,1rem)] p-[clamp(0.6rem,3.5cqw,1rem)]">
                   {record.avatarUrl ? (
-                    <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-16 shrink-0 object-cover" />
+                    <img src={record.avatarUrl} alt="" className="aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 object-cover" />
                   ) : (
-                    <span className="flex aspect-[7/9] w-16 shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
+                    <span className="flex aspect-[7/9] w-[clamp(2.25rem,20cqw,4rem)] shrink-0 items-center justify-center bg-black font-mono text-xs text-white">
                       {(record.name || "?").slice(0, 1)}
                     </span>
                   )}
