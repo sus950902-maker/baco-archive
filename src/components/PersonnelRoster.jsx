@@ -56,7 +56,10 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
     const inFaction = filter === "我的檔案" ? Boolean(user) && record.ownerUid === user.uid : filter === "全部" || record.faction === filter
     if (!inFaction) return false
     if (!needle) return true
-    return (record.name || "").toLowerCase().includes(needle) || (record.fileNo || "").toLowerCase().includes(needle)
+    const name = (record.name || "").toLowerCase()
+    const fileNo = (record.fileNo || "").toLowerCase()
+    const uid = (record.uid || "").toLowerCase()
+    return name.includes(needle) || fileNo.includes(needle) || uid === needle
   })
   const ordered = [...visible].sort(filter === "全部" || filter === "我的檔案" ? byMine : byFileNo)
 
@@ -132,8 +135,8 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="搜索名稱或編號"
-          aria-label="搜索名稱或編號"
+          placeholder="搜索名稱、編號或 UID"
+          aria-label="搜索名稱、編號或 UID"
           className="w-full min-w-0 border border-black/20 bg-white px-3 py-1.5 font-mono text-xs text-black outline-none focus:border-alert sm:ml-auto sm:w-52"
         />
       </div>
