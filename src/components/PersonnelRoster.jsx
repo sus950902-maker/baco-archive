@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
 import { primeTouch } from "../primeTouch"
-import { characterTitle, claimCharacter, FACTION_COLOR, factionHasDepartment, factionLabel } from "../characters"
+import { bindLimit, characterTitle, claimCharacter, FACTION_COLOR, factionHasDepartment, factionLabel } from "../characters"
 import PortraitArt from "./PortraitArt"
 
 const FILTERS = ["全部", "我的檔案", "調查員", "異常", "民眾", "議會"]
@@ -62,6 +62,9 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
     return name.includes(needle) || fileNo.includes(needle) || uid === needle
   })
   const ordered = [...visible].sort(filter === "全部" || filter === "我的檔案" ? byMine : byFileNo)
+  const ownedCount = user ? records.filter((record) => record.ownerUid === user.uid).length : 0
+  const slotLimit = bindLimit(profile?.role)
+  const slotsLeft = Number.isFinite(slotLimit) ? slotLimit - ownedCount : null
 
   async function claim(event) {
     event.preventDefault()
@@ -140,6 +143,11 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           className="w-full min-w-0 border border-black/20 bg-white px-3 py-1.5 font-mono text-xs text-black outline-none focus:border-alert sm:ml-auto sm:w-52"
         />
       </div>
+      {filter === "我的檔案" && user && slotsLeft !== null && (
+        <p className={`mt-3 font-mono text-[11px] tracking-wide ${slotsLeft > 0 ? "text-ash" : "text-alert"}`}>
+          {slotsLeft > 0 ? `剩餘可綁定角色卡：${slotsLeft}` : "目前可綁定檔案數量已到達上限"}
+        </p>
+      )}
 
       <div className="roster-dark mt-16 flex-1">
       {loadError ? (

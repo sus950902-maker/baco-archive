@@ -41,6 +41,12 @@ export function isStaffRole(role) {
   return role === "moderator" || role === "admin"
 }
 
+export function bindLimit(role) {
+  if (role === "admin") return Infinity
+  if (role === "moderator") return 4
+  return 3
+}
+
 export function roleFromClearance(level) {
   if (level === "high") return "admin"
   if (level === "mid") return "moderator"
@@ -193,7 +199,7 @@ export async function claimCharacter(rawCode, user, profile) {
   }
   const characterRef = doc(db, "characters", lookup.data().characterId)
   const held = await getDocs(query(collection(db, "characters"), where("ownerUid", "==", user.uid)))
-  const limit = profile?.role === "admin" ? Infinity : profile?.role === "moderator" ? 4 : 3
+  const limit = bindLimit(profile?.role)
   const boundCount = held.docs.filter((entry) => entry.id !== characterRef.id && entry.data().status === "bound").length
   if (boundCount >= limit) {
     const error = new Error(limit === 4 ? "中級權限最多綁定 4 張角卡" : "每個帳號最多綁定 3 張角卡")
