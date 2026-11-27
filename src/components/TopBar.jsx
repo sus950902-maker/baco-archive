@@ -42,12 +42,28 @@ function IdentityMark({ src, name }) {
 const actionClass =
   "shrink-0 border border-line bg-panel px-2 py-1.5 font-mono text-[10px] tracking-wide whitespace-nowrap text-ink transition-colors hover:border-alert hover:text-alert focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-alert disabled:opacity-40 sm:px-3 sm:py-2 sm:text-xs"
 
+const LINK_STATE = {
+  secure: { label: "連線狀態：SECURE", tone: "text-signal", dot: "bg-signal" },
+  unstable: { label: "連線狀態：UNSTABLE", tone: "text-amber", dot: "bg-amber" },
+  offline: { label: "連線狀態：OFFLINE", tone: "text-alert", dot: "bg-alert" },
+}
+
+function readLink() {
+  if (typeof navigator === "undefined" || navigator.onLine === false) return "offline"
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+  if (!connection) return "secure"
+  const slowType = connection.effectiveType === "slow-2g" || connection.effectiveType === "2g"
+  const highLatency = typeof connection.rtt === "number" && connection.rtt >= 800
+  const weakDownlink = typeof connection.downlink === "number" && connection.downlink > 0 && connection.downlink < 0.5
+  if (slowType || highLatency || weakDownlink) return "unstable"
+  return "secure"
+}
+
 export default function TopBar({
   page,
   user,
   profile,
   authReady,
-  clearance,
   staff,
   domainFirst,
   domainAccess,
@@ -60,6 +76,7 @@ export default function TopBar({
 }) {
   const headerRef = useRef(null)
   const [stamp, setStamp] = useState(() => formatStamp(new Date()))
+  const [link, setLink] = useState(readLink)
   const [open, setOpen] = useState(false)
   const [headerHeight, setHeaderHeight] = useState(0)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -72,6 +89,19 @@ export default function TopBar({
   useEffect(() => {
     const timer = setInterval(() => setStamp(formatStamp(new Date())), 1000)
     return () => clearInterval(timer)
+  }, [])
+
+  useEffect(() => {
+    const sync = () => setLink(readLink())
+    window.addEventListener("online", sync)
+    window.addEventListener("offline", sync)
+    const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+    connection?.addEventListener?.("change", sync)
+    return () => {
+      window.removeEventListener("online", sync)
+      window.removeEventListener("offline", sync)
+      connection?.removeEventListener?.("change", sync)
+    }
   }, [])
 
   useEffect(() => {
@@ -164,21 +194,12 @@ export default function TopBar({
       className="sticky top-0 z-40 border-b border-white/10 bg-black overscroll-none"
     >
       <div className="hidden items-center justify-between gap-3 overflow-hidden border-b border-line px-4 py-2 sm:flex sm:px-6">
-        <p className="flex min-w-0 items-center gap-1.5 font-mono text-[10px] tracking-wide text-signal sm:gap-2 sm:text-[11px]">
-          <span className="inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-signal text-signal animate-led sm:h-2 sm:w-2" />
-          <span className="truncate">連線狀態：SECURE // CHANNEL-04</span>
+        <p className={`flex min-w-0 items-center gap-1.5 font-mono text-[10px] tracking-wide sm:gap-2 sm:text-[11px] ${LINK_STATE[link].tone}`}>
+          <span className={`inline-block h-1.5 w-1.5 shrink-0 rounded-full animate-led sm:h-2 sm:w-2 ${LINK_STATE[link].dot}`} />
+          <span className="truncate">{LINK_STATE[link].label}</span>
         </p>
         <div className="flex shrink-0 items-center gap-2 font-mono text-[10px] text-ash sm:gap-3 sm:text-[11px]">
-          <span className="hidden truncate sm:inline">
-            <span className="hidden lg:inline">SYSTEM: INTERNAL ARCHIVE // </span>
-            {clearance === "high"
-              ? "CLEARANCE: HIGH // 高級管理"
-              : clearance === "mid"
-                ? "CLEARANCE: MID // 中級管理"
-                : user
-                  ? "CLEARANCE: AUTHORIZED // 已綁定"
-                  : "CLEARANCE: GUEST"}
-          </span>
+          <span className="hidden truncate sm:inline">FEDERAL STANDARD TIME //</span>
           <time dateTime={stamp} className="shrink-0 text-ink">
             {stamp}
           </time>
