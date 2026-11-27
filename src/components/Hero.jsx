@@ -21,7 +21,7 @@ const WORLD = [
   "受歷史異常輻射影響，星球上棲息著人類、改造人、亞人種，甚至是擁有自我意識並以人形融入社會的受控異常個體；但社會的絕大多數民眾依然是毫無防備、沒有特殊能力的普通市民。",
 ]
 
-const bodyClass = "text-sm font-[450] leading-7 text-ink sm:text-[17px] sm:leading-8"
+const bodyClass = "text-base font-[450] leading-7 text-ink sm:text-[17px] sm:leading-8"
 
 export default function Hero({ user, onNotice }) {
   const [openId, setOpenId] = useState(null)
@@ -75,21 +75,21 @@ export default function Hero({ user, onNotice }) {
                   className={`flex w-full items-stretch text-left ${locked ? "cursor-not-allowed" : ""}`}
                 >
                   <span
-                    className={`flex w-11 shrink-0 flex-col items-center justify-center gap-1 font-mono text-xs tracking-wide text-white sm:w-14 sm:text-sm ${locked ? "bg-[#9a958c]" : "bg-black"}`}
+                    className={`flex w-12 shrink-0 flex-col items-center justify-center gap-1 font-mono text-sm tracking-wide text-white sm:w-14 ${locked ? "bg-[#9a958c]" : "bg-black"}`}
                   >
                     {locked && <Lock className="h-3.5 w-3.5" aria-hidden="true" />}
                     {file.index}
                   </span>
-                  <span className="flex min-w-0 flex-1 items-center justify-between gap-2 px-3 py-2.5 sm:gap-3 sm:px-5 sm:py-3">
+                  <span className="flex min-w-0 flex-1 items-center justify-between gap-2.5 px-3.5 py-3 sm:gap-3 sm:px-5">
                     <span className="min-w-0">
-                      <span className="block font-mono text-[10px] tracking-[0.18em] text-ash sm:text-[11px] sm:tracking-[0.22em]">
+                      <span className="block font-mono text-[11px] tracking-[0.18em] text-ash sm:tracking-[0.22em]">
                         {file.code}
                       </span>
-                      <span className={`mt-0.5 block text-base font-bold sm:mt-1 sm:text-lg ${locked ? "text-[#9a958c]" : "text-ink"}`}>
+                      <span className={`mt-1 block text-lg font-bold ${locked ? "text-[#9a958c]" : "text-ink"}`}>
                         {locked ? "權限不足" : file.title}
                       </span>
                     </span>
-                    <span className={`shrink-0 font-mono text-[10px] tracking-[0.14em] sm:text-[11px] sm:tracking-[0.16em] ${locked ? "text-alert" : "text-ash"}`}>
+                    <span className={`shrink-0 font-mono text-[11px] tracking-[0.14em] sm:tracking-[0.16em] ${locked ? "text-alert" : "text-ash"}`}>
                       {locked ? "LOCKED" : open ? "OPEN" : "SEALED"}
                     </span>
                   </span>
@@ -97,10 +97,10 @@ export default function Hero({ user, onNotice }) {
                 <div className={`faction-expand ${open ? "is-open" : ""}`} aria-hidden={!open}>
                   <div>
                     {!locked && (
-                      <div className="border-t border-[#d6d1c7] px-4 py-4 sm:px-8 sm:py-7">
+                      <div className="border-t border-[#d6d1c7] px-5 py-5 sm:px-8 sm:py-7">
                         {file.id === "brief" ? (
                           <div className="space-y-4">
-                            <p className="text-sm font-bold leading-7 text-alert sm:text-[17px] sm:leading-8">{BRIEFING[0]}</p>
+                            <p className="text-base font-bold leading-7 text-alert sm:text-[17px] sm:leading-8">{BRIEFING[0]}</p>
                             <p className={bodyClass}>
                               異常收容與觀測調查局
                               <span className="text-ash">
@@ -156,7 +156,7 @@ export default function Hero({ user, onNotice }) {
                             {WORLD.map((paragraph, index) => (
                               <p
                                 key={paragraph}
-                                className={`text-sm leading-7 text-ink sm:text-[17px] sm:leading-8 ${index === 0 ? "font-bold" : "font-[450]"}`}
+                                className={`text-base leading-7 text-ink sm:text-[17px] sm:leading-8 ${index === 0 ? "font-bold" : "font-[450]"}`}
                               >
                                 {paragraph}
                               </p>

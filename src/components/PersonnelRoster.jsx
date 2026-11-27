@@ -150,7 +150,7 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
           {ordered.map((record, index) => (
             <li key={`${entrance}-${record.id}`} className="roster-card" style={{ animationDelay: `${Math.min(index, 8) * 70}ms` }}>
               <div className="character-shadow">
-              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card character-sheet relative w-full min-w-0 max-w-full origin-center overflow-visible p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
+              <button type="button" onClick={(event) => { if (primeTouch(event)) return; onOpen(record) }} className={`panel character-card character-sheet relative w-full min-w-0 max-w-full origin-center p-0 text-left transition-transform duration-200 ease-out hover:scale-[1.025] ${record.portraitUrl ? "min-h-[var(--portrait-h)] pr-[var(--portrait-w)]" : ""}`}>
                 <span className="character-logo-clip" aria-hidden="true">
                   <img src="/logo4.png" alt="" className="character-logo" />
                 </span>

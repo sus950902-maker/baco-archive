@@ -33,14 +33,14 @@ export default function SiteSections() {
         >
           <div className="reveal-right mb-4 flex flex-wrap items-end justify-between gap-2 sm:mb-5 sm:gap-3">
             <div>
-              <p className="font-mono text-[10px] tracking-[0.16em] text-comment sm:text-[11px] sm:tracking-[0.28em]">{section.code}</p>
-              <h2 className="mt-2 text-xl font-medium text-ink sm:text-3xl">{section.title}</h2>
+              <p className="font-mono text-[11px] tracking-[0.18em] text-comment sm:tracking-[0.28em]">{section.code}</p>
+              <h2 className="mt-2 text-2xl font-medium text-ink sm:text-3xl">{section.title}</h2>
             </div>
-            <p className="font-mono text-[10px] text-ash sm:text-[11px]">FILE LOCK: READ ONLY // GUEST</p>
+            <p className="font-mono text-[11px] text-ash">FILE LOCK: READ ONLY // GUEST</p>
           </div>
-          <div className="reveal-right panel hud-corner p-4 sm:p-8">
-            <p className="font-mono text-[10px] tracking-[0.16em] text-ash sm:text-[11px] sm:tracking-[0.22em]">{section.file}</p>
-            <p className="mt-3 max-w-3xl text-sm font-[450] leading-7 text-ink sm:mt-4 sm:text-[17px] sm:leading-8">{section.body}</p>
+          <div className="reveal-right panel hud-corner p-5 sm:p-8">
+            <p className="font-mono text-[11px] tracking-[0.18em] text-ash sm:tracking-[0.22em]">{section.file}</p>
+            <p className="mt-3 max-w-3xl text-base font-[450] leading-7 text-ink sm:mt-4 sm:text-[17px] sm:leading-8">{section.body}</p>
           </div>
         </section>
       ))}

@@ -288,6 +288,7 @@ export default function App() {
       <div className="scanlines" />
       <div className="scanbar" />
       {(view === "intranet" || view === "announcements") && <div className="vignette" />}
+      {(view === "archive" || view === "staff") && <div className="vignette vignette-paper" />}
 
       {!booted && <BootScreen onDone={finishBoot} />}
 
