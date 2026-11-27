@@ -20,6 +20,7 @@ import { isStaffRole, roleFromClearance } from "./characters"
 import { readStoredClearance, storeClearance } from "./clearance"
 import { auth, db, googleProvider } from "./firebase"
 import { writeOwnUser } from "./accountWrite"
+import { adoptBoundRecord } from "./boundRoster"
 import { issuePublicUid } from "./publicUid"
 import { useScrollReveal } from "./scrollReveal"
 
@@ -367,6 +368,7 @@ export default function App() {
               staff={staff}
               onNotice={pushNotice}
               onSaved={(record) => {
+                adoptBoundRecord(record)
                 setEditingCharacter(record)
                 setStaffEntry((current) => ({ filter: "我的檔案", token: current.token + 1 }))
                 if (window.location.hash !== "#staff") window.location.hash = "#staff"

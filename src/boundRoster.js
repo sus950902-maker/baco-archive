@@ -16,14 +16,44 @@ const state = {
 }
 
 const listeners = new Set()
+const adopted = new Map()
 let stopData = () => {}
 let refreshTimer = 0
 let refreshing = false
 let dataMode = null
 
-function emit() {
+function publish() {
   const snapshot = { records: state.records, error: state.error }
   listeners.forEach((listener) => listener(snapshot))
+}
+
+function emit() {
+  publish()
+}
+
+function applyServerRecords(records, authoritative) {
+  const present = new Set(records.map((record) => record.id))
+  adopted.forEach((record, id) => {
+    if (present.has(id) || authoritative) adopted.delete(id)
+  })
+  const extras = []
+  adopted.forEach((record) => {
+    if (!present.has(record.id)) extras.push(record)
+  })
+  state.records = extras.length ? [...records, ...extras] : records
+  state.error = ""
+  publish()
+}
+
+export function adoptBoundRecord(record) {
+  if (!record?.id) return
+  adopted.set(record.id, record)
+  const index = state.records.findIndex((item) => item.id === record.id)
+  state.records = index === -1
+    ? [...state.records, record]
+    : state.records.map((item) => (item.id === record.id ? { ...item, ...record } : item))
+  state.error = ""
+  publish()
 }
 
 function clearRefresh() {
@@ -60,6 +90,7 @@ async function refreshSnapshot() {
     const snap = await getDocs(query(collection(db, "characters"), where("status", "==", "bound")))
     const cards = snap.docs.map((entry) => publicCharacter(entry.id, entry.data()))
     await setDoc(SNAPSHOT_DOC, { cards, updatedAt: serverTimestamp() })
+    applyServerRecords(cards, true)
     state.updatedAt = Date.now()
   } catch {
     state.error = "內部名冊讀取失敗"
@@ -83,10 +114,8 @@ function listenLive() {
   const unsubscribe = onSnapshot(
     roster,
     (snap) => {
-      state.records = snap.docs.map((entry) => publicCharacter(entry.id, entry.data()))
-      state.error = ""
+      applyServerRecords(snap.docs.map((entry) => publicCharacter(entry.id, entry.data())), true)
       state.updatedAt = 0
-      emit()
     },
     () => {
       state.error = "內部名冊讀取失敗"
@@ -101,10 +130,8 @@ function listenSnapshot() {
     SNAPSHOT_DOC,
     (snap) => {
       const data = snap.data()
-      state.records = Array.isArray(data?.cards) ? data.cards : []
+      applyServerRecords(Array.isArray(data?.cards) ? data.cards : [], false)
       state.updatedAt = data?.updatedAt?.toMillis?.() || 0
-      state.error = ""
-      emit()
       scheduleRefresh()
     },
     () => {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react"
-import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
+import { adoptBoundRecord, peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
 import { primeTouch } from "../primeTouch"
 import { bindLimit, characterTitle, claimCharacter, FACTION_COLOR, factionHasDepartment, factionLabel } from "../characters"
 import PortraitArt from "./PortraitArt"
@@ -77,6 +77,9 @@ export default function PersonnelRoster({ user, profile, onNotice, onOpen, onEdi
     try {
       const record = await claimCharacter(code, user, profile)
       setCode("")
+      adoptBoundRecord(record)
+      setFilter("我的檔案")
+      setEntrance((current) => current + 1)
       onNotice({ code: "BINDING // CONFIRMED", message: "身份綁定成功！已取得該角色卡編輯與使用權限" })
       onEdit(record)
     } catch (bindError) {
