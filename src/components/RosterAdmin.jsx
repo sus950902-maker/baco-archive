@@ -3,7 +3,13 @@ import { collection, doc, onSnapshot, serverTimestamp, updateDoc } from "firebas
 import { assignFileNumbers, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl } from "../media"
-import { subscribeSiteControls, writeSiteControls } from "../siteControls"
+import { subscribeSiteControls, taipeiDay, writeSiteControls } from "../siteControls"
+
+function touchPatch(account) {
+  const today = taipeiDay()
+  const touchCount = account?.touchDay === today ? Number(account.touchCount || 0) + 1 : 1
+  return { touchDay: today, touchCount, updatedAt: serverTimestamp() }
+}
 
 export default function RosterAdmin({ staff, role, ready, onNotice }) {
   const [records, setRecords] = useState([])
@@ -68,7 +74,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
       if (owns) lowSynced.current.delete(revokeKey)
       if (owns && (!account.role || account.role === "user") && !lowSynced.current.has(grantKey)) {
         lowSynced.current.add(grantKey)
-        updateDoc(doc(db, "users", account.id), { role: "low", updatedAt: serverTimestamp() }).catch(() => {
+        updateDoc(doc(db, "users", account.id), { role: "low", ...touchPatch(account) }).catch(() => {
           lowSynced.current.delete(grantKey)
         })
         return
@@ -76,7 +82,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
       if (!owns && account.role === "low" && !lowSynced.current.has(revokeKey)) {
         lowSynced.current.add(revokeKey)
         lowSynced.current.delete(grantKey)
-        updateDoc(doc(db, "users", account.id), { role: "user", updatedAt: serverTimestamp() }).catch(() => {
+        updateDoc(doc(db, "users", account.id), { role: "user", ...touchPatch(account) }).catch(() => {
           lowSynced.current.delete(revokeKey)
         })
       }
@@ -121,7 +127,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
       await updateDoc(doc(db, "users", account.id), {
         role: ownsCard ? "low" : "user",
         clearanceHold: true,
-        updatedAt: serverTimestamp(),
+        ...touchPatch(account),
       })
       setPendingRevoke("")
       onNotice({ code: "CLEARANCE // REVOKED", message: `${account.displayName || account.publicUid || "帳號"} 的中級管理權已移除。` })

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { onAuthStateChanged, signInWithPopup, signOut } from "firebase/auth"
-import { collection, doc, getDoc, getDocs, limit, query, serverTimestamp, setDoc, where } from "firebase/firestore"
-import BootScreen from "./components/BootScreen"
+import { collection, doc, getDoc, getDocs, limit, query, where } from "firebase/firestore"
+import BootSequenceModal, { bootAlreadyPlayed } from "./components/BootSequenceModal"
 import Footer from "./components/Footer"
 import CharacterEditor from "./components/CharacterEditor"
 import CharacterModal from "./components/CharacterModal"
@@ -19,6 +19,7 @@ import TopBar from "./components/TopBar"
 import { isStaffRole, roleFromClearance } from "./characters"
 import { readStoredClearance, storeClearance } from "./clearance"
 import { auth, db, googleProvider } from "./firebase"
+import { writeOwnUser } from "./accountWrite"
 import { issuePublicUid } from "./publicUid"
 import { useScrollReveal } from "./scrollReveal"
 
@@ -32,12 +33,20 @@ const PAGES = {
 
 const INTERNAL_PAGES = new Set(["intranet", "announcements", "staff", "staff-admin", "card"])
 
+function clearanceLabel(role) {
+  if (role === "admin") return "COUNCIL"
+  if (role === "moderator") return "INTERMEDIATE"
+  return "BASIC"
+}
+
 function readPage() {
   return PAGES[window.location.hash] || "archive"
 }
 
 export default function App() {
-  const [booted, setBooted] = useState(false)
+  const [booted, setBooted] = useState(bootAlreadyPlayed)
+  const [authSequence, setAuthSequence] = useState(null)
+  const loginPending = useRef(false)
   const [page, setPage] = useState(readPage)
   const [user, setUser] = useState(null)
   const [profile, setProfile] = useState(null)
@@ -148,8 +157,8 @@ export default function App() {
     storeClearance(user.uid, level)
     setClearance(level)
     try {
-      await setDoc(doc(db, "users", user.uid), { role: nextRole, clearanceHold: false, updatedAt: serverTimestamp() }, { merge: true })
-      setProfile((currentProfile) => ({ ...(currentProfile || {}), role: nextRole, clearanceHold: false }))
+      const saved = await writeOwnUser({ role: nextRole, clearanceHold: false })
+      setProfile((currentProfile) => ({ ...(currentProfile || {}), ...saved, role: nextRole, clearanceHold: false }))
     } catch (error) {
       pushNotice({ code: "CLEARANCE // DENIED", message: error.message || "權限寫入失敗" })
       return
@@ -164,32 +173,31 @@ export default function App() {
     return onAuthStateChanged(auth, async (next) => {
       setUser(next)
       if (!next) {
+        loginPending.current = false
         setProfile(null)
         setProfileOpen(false)
         setAuthReady(true)
         return
       }
 
+      let assigned = "user"
       try {
         const snap = await getDoc(doc(db, "users", next.uid))
         if (snap.exists()) {
           const data = snap.data()
+          const patch = {}
           const storedLevel = readStoredClearance(next.uid)
           if (storedLevel && !isStaffRole(data.role) && !data.clearanceHold) {
-            const role = roleFromClearance(storedLevel)
-            try {
-              await setDoc(doc(db, "users", next.uid), { role, clearanceHold: false }, { merge: true })
-              data.role = role
-              data.clearanceHold = false
-            } catch {
-              data.role = role
-            }
+            patch.role = roleFromClearance(storedLevel)
+            patch.clearanceHold = false
+            data.role = patch.role
+            data.clearanceHold = false
           }
           if (!isStaffRole(data.role) && data.role !== "low") {
             try {
               const owned = await getDocs(query(collection(db, "characters"), where("ownerUid", "==", next.uid), limit(1)))
               if (!owned.empty) {
-                await setDoc(doc(db, "users", next.uid), { role: "low" }, { merge: true })
+                patch.role = "low"
                 data.role = "low"
               }
             } catch {
@@ -199,12 +207,21 @@ export default function App() {
           if (!data.publicUid) {
             try {
               const publicUid = await issuePublicUid()
-              await setDoc(doc(db, "users", next.uid), { publicUid }, { merge: true })
+              patch.publicUid = publicUid
               data.publicUid = publicUid
             } catch {
               data.publicUid = ""
             }
           }
+          if (Object.keys(patch).length) {
+            try {
+              const saved = await writeOwnUser(patch, data)
+              Object.assign(data, saved)
+            } catch {
+              // 登入當下的補寫失敗時，先沿用這次讀到的檔案。
+            }
+          }
+          assigned = data.role || "user"
           setProfile(data)
         } else {
           setProfile(null)
@@ -216,14 +233,23 @@ export default function App() {
         pushNotice({ code: "AUTH MODULE // DENIED", message: error.message || "檔案讀取失敗" })
       } finally {
         setAuthReady(true)
+        if (loginPending.current) {
+          loginPending.current = false
+          setAuthSequence({
+            subject: next.displayName || next.email || "UNKNOWN",
+            clearance: clearanceLabel(assigned),
+          })
+        }
       }
     })
   }, [pushNotice])
 
   async function login() {
+    loginPending.current = true
     try {
       await signInWithPopup(auth, googleProvider)
     } catch (error) {
+      loginPending.current = false
       if (error.code === "auth/popup-closed-by-user" || error.code === "auth/cancelled-popup-request") return
       const blocked =
         error.code === "auth/popup-blocked" ||
@@ -290,7 +316,15 @@ export default function App() {
       {(view === "intranet" || view === "announcements") && <div className="vignette" />}
       {(view === "archive" || view === "staff") && <div className="vignette vignette-paper" />}
 
-      {!booted && <BootScreen onDone={finishBoot} />}
+      {!booted && <BootSequenceModal mode="boot" onDone={finishBoot} />}
+      {authSequence && (
+        <BootSequenceModal
+          mode="auth"
+          subject={authSequence.subject}
+          clearance={authSequence.clearance}
+          onDone={() => setAuthSequence(null)}
+        />
+      )}
 
       <TopBar
         page={view}

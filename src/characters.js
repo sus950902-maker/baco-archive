@@ -1,5 +1,4 @@
 import {
-  addDoc,
   collection,
   doc,
   getDoc,
@@ -12,6 +11,7 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore"
+import { reserveCharacterWrite, writeOwnUser } from "./accountWrite"
 import { db } from "./firebase"
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -135,6 +135,7 @@ export async function createCharacter(input) {
   const bindCode = await uniqueBindCode()
   const fileNo = input.fileNo || (await reserveFileNo(input.faction))
   const characterRef = doc(collection(db, "characters"))
+  await reserveCharacterWrite(characterRef.id, bindCode)
   const batch = writeBatch(db)
   batch.set(characterRef, {
     uid: serial,
@@ -223,7 +224,7 @@ export async function claimCharacter(rawCode, user, profile) {
   }
   if (!isStaffRole(profile?.role)) {
     try {
-      await setDoc(doc(db, "users", user.uid), { role: "low", updatedAt: serverTimestamp() }, { merge: true })
+      await writeOwnUser({ role: "low" })
     } catch {
       // 角色已綁定。低級權限會在下次登入時再寫入。
     }
@@ -236,7 +237,7 @@ export async function publishCharacterAnnouncement(record) {
   const faction = record.faction || ""
   const fileNo = record.fileNo || ""
   const code = `${faction}${fileNo}`
-  await addDoc(collection(db, "announcements"), {
+  await setDoc(doc(db, "announcements", record.id), {
     text: code ? `${code} ${name} 已錄入檔案數據庫` : `${name} 已錄入檔案數據庫`,
     faction,
     fileNo,

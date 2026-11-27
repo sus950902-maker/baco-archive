@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react"
 import imageCompression from "browser-image-compression"
 import { updateProfile } from "firebase/auth"
-import { doc, serverTimestamp, setDoc } from "firebase/firestore"
-import { db } from "../firebase"
+import { serverTimestamp } from "firebase/firestore"
+import { writeOwnUser } from "../accountWrite"
 import { issuePublicUid } from "../publicUid"
 import IdentityCard from "./IdentityCard"
 
@@ -256,7 +256,7 @@ export default function ProfileModal({ user, profile, onClose, onSaved, onOpenCh
         record.role = "user"
         record.createdAt = serverTimestamp()
       }
-      await setDoc(doc(db, "users", user.uid), record, { merge: true })
+      await writeOwnUser(record)
       await updateProfile(user, {
         displayName: name,
         photoURL: avatarUrl || null,

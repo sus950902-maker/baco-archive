@@ -25,13 +25,14 @@ export function AnnouncementTicker() {
       const next = snap.docs
         .map((entry) => readAnnouncement(entry.id, entry.data()))
         .sort((left, right) => right.createdAt - left.createdAt || right.id.localeCompare(left.id))
+      const stampOf = (item) => `${item.id}:${item.createdAt}`
       if (!ready.current) {
         ready.current = true
-        next.forEach((item) => known.current.add(item.id))
+        next.forEach((item) => known.current.add(stampOf(item)))
         return
       }
-      const added = next.filter((item) => !known.current.has(item.id))
-      next.forEach((item) => known.current.add(item.id))
+      const added = next.filter((item) => !known.current.has(stampOf(item)))
+      next.forEach((item) => known.current.add(stampOf(item)))
       if (added[0]) setPopup(added[0])
     })
   }, [])

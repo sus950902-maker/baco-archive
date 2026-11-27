@@ -1,4 +1,5 @@
 import { initializeApp } from "firebase/app"
+import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check"
 import { getAuth, GoogleAuthProvider } from "firebase/auth"
 import { getFirestore } from "firebase/firestore"
 
@@ -13,6 +14,13 @@ const firebaseConfig = {
 }
 
 const app = initializeApp(firebaseConfig)
+const appCheckKey = import.meta.env.VITE_APPCHECK_SITE_KEY
+if (appCheckKey) {
+  initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(appCheckKey),
+    isTokenAutoRefreshEnabled: true,
+  })
+}
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
 export const db = getFirestore(app)

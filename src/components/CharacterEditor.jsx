@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
+import { reserveCharacterWrite } from "../accountWrite"
 import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionHasDepartment, factionLabel, publishCharacterAnnouncement } from "../characters"
 import { db } from "../firebase"
 import { subscribeSiteControls, taipeiDay } from "../siteControls"
@@ -80,6 +81,7 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
         patch.portraitPublicId = ""
       }
       setStatus("檔案寫入中")
+      await reserveCharacterWrite(character.id)
       const firstSave = !character.name || character.name === "未命名"
       if (quotaOn) {
         if (editCount < 5) patch.editCount = editCount + 1

@@ -24,7 +24,7 @@ service cloud.firestore {
     }
 
     function roleFieldsOnly() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'clearanceHold', 'updatedAt']);
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['role', 'clearanceHold', 'updatedAt', 'touchCount', 'touchDay']);
     }
 
     function editQuotaOn() {
@@ -57,11 +57,94 @@ service cloud.firestore {
           && resource.data.get('editDay', '') != taipeiDay());
     }
 
+    function actor() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userPaced() {
+      return request.resource.data.updatedAt == request.time
+        && (
+          !resource.data.keys().hasAny(['updatedAt'])
+          || resource.data.updatedAt < request.time - duration.value(2, 's')
+        );
+    }
+
+    function quotaFieldsHeld() {
+      return request.resource.data.get('opCount', 0) == resource.data.get('opCount', 0)
+        && request.resource.data.get('opDay', '') == resource.data.get('opDay', '')
+        && request.resource.data.get('pendingCharacterId', '') == resource.data.get('pendingCharacterId', '')
+        && request.resource.data.get('pendingBind', '') == resource.data.get('pendingBind', '')
+        && request.resource.data.get('reservedAt', timestamp.date(2000, 1, 1)) == resource.data.get('reservedAt', timestamp.date(2000, 1, 1));
+    }
+
+    function quotaStepUser() {
+      return request.resource.data.pendingCharacterId is string
+        && request.resource.data.pendingCharacterId.size() >= 16
+        && request.resource.data.reservedAt == request.time
+        && request.resource.data.opDay == taipeiDay()
+        && request.resource.data.opCount is int
+        && request.resource.data.opCount > 0
+        && request.resource.data.opCount <= 200
+        && request.resource.data.opCount == (
+          resource.data.get('opDay', '') == taipeiDay()
+            ? resource.data.get('opCount', 0) + 1
+            : 1
+        )
+        && (
+          request.resource.data.get('pendingBind', '') == resource.data.get('pendingBind', '')
+          || (
+            request.resource.data.pendingBind is string
+            && request.resource.data.pendingBind.matches('^[A-Z0-9]{4}-[A-Z0-9]{4}$')
+            && request.resource.data.pendingBind != resource.data.get('pendingBind', '')
+          )
+        );
+    }
+
+    function touchStep() {
+      return request.resource.data.touchDay == taipeiDay()
+        && request.resource.data.touchCount is int
+        && request.resource.data.touchCount > 0
+        && request.resource.data.touchCount <= 200
+        && request.resource.data.touchCount == (
+          resource.data.get('touchDay', '') == taipeiDay()
+            ? resource.data.get('touchCount', 0) + 1
+            : 1
+        );
+    }
+
+    function reservedFor(charId) {
+      return actor().pendingCharacterId == charId
+        && actor().reservedAt is timestamp
+        && actor().reservedAt > request.time - duration.value(45, 's')
+        && actor().opDay == taipeiDay()
+        && actor().opCount is int
+        && actor().opCount > 0
+        && actor().opCount <= 200
+        && (
+          !resource.data.keys().hasAny(['updatedAt'])
+          || resource.data.updatedAt < actor().reservedAt
+        );
+    }
+
+    function fillEmptyFileNo() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fileNo'])
+        && resource.data.get('fileNo', '') == ''
+        && request.resource.data.fileNo is string
+        && request.resource.data.fileNo.matches('^[0-9]{3}$');
+    }
+
+    function probeFields() {
+      return request.resource.data.keys().hasOnly(['text', 'createdAt', 'ephemeral'])
+        && request.resource.data.ephemeral == true
+        && request.resource.data.text == '測試123456789'
+        && request.resource.data.createdAt == request.time;
+    }
+
     match /users/{userId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow create: if signedIn() && request.auth.uid == userId
-        && request.resource.data.role in ['user', 'low', 'moderator', 'admin'];
-      allow update: if signedIn() && (
+        && request.resource.data.role in ['user', 'low'];
+      allow update: if signedIn() && userPaced() && touchStep() && (quotaFieldsHeld() || quotaStepUser()) && (
         (request.auth.uid == userId
           && request.resource.data.role in ['user', 'low', 'moderator', 'admin']
           && (keepsRole() || hasMidClearance() || resource.data.get('role', 'user') in ['user', 'low']))
@@ -82,8 +165,10 @@ service cloud.firestore {
     }
 
     match /characters/{charId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow create: if hasMidClearance()
+        && charId == actor().pendingCharacterId
+        && actor().reservedAt > request.time - duration.value(45, 's')
         && request.resource.data.status == 'unassigned'
         && request.resource.data.ownerUid == null
         && request.resource.data.uid is string
@@ -91,7 +176,7 @@ service cloud.firestore {
         && request.resource.data.fileNo is string
         && request.resource.data.name is string
         && request.resource.data.faction in ['調查員', '異常', '民眾', '議會'];
-      allow update: if hasMidClearance()
+      allow update: if (hasMidClearance() && (reservedFor(charId) || fillEmptyFileNo()))
         || (signedIn()
             && resource.data.status == 'unassigned'
             && request.resource.data.status == 'bound'
@@ -108,6 +193,7 @@ service cloud.firestore {
             && request.resource.data.fileNo == resource.data.fileNo
             && request.resource.data.faction == resource.data.faction
             && request.resource.data.status == 'bound'
+            && reservedFor(charId)
             && ((!editQuotaOn() && keepsEditQuota()) || (editQuotaOn() && quotaStep())));
       allow delete: if hasMidClearance();
     }
@@ -116,6 +202,9 @@ service cloud.firestore {
       allow get: if signedIn();
       allow list: if false;
       allow create: if hasMidClearance()
+        && code == actor().pendingBind
+        && request.resource.data.characterId == actor().pendingCharacterId
+        && actor().reservedAt > request.time - duration.value(45, 's')
         && request.resource.data.characterId is string
         && request.resource.data.faction in ['調查員', '異常', '民眾', '議會'];
       allow delete: if hasMidClearance();
@@ -123,13 +212,13 @@ service cloud.firestore {
     }
 
     match /announcements/{id} {
-      allow read: if true;
-      allow create: if hasMidClearance()
-        && request.resource.data.keys().hasOnly(['text', 'createdAt', 'ephemeral'])
-        && request.resource.data.ephemeral == true
-        && request.resource.data.text == '測試123456789'
-        && request.resource.data.createdAt == request.time
-        || signedIn()
+      allow read: if signedIn();
+      allow create: if (
+        hasMidClearance()
+        && id == 'probe-' + request.auth.uid
+        && probeFields()
+      ) || (
+        signedIn()
         && request.resource.data.keys().hasOnly(['text', 'createdAt', 'characterId', 'faction', 'fileNo', 'characterName'])
         && request.resource.data.text is string
         && request.resource.data.text.size() > 0
@@ -141,26 +230,43 @@ service cloud.firestore {
         && request.resource.data.characterName.size() > 0
         && request.resource.data.characterName.size() < 40
         && request.resource.data.createdAt == request.time
+        && id == request.resource.data.characterId
         && request.resource.data.characterId is string
         && exists(/databases/$(database)/documents/characters/$(request.resource.data.characterId))
-        && get(/databases/$(database)/documents/characters/$(request.resource.data.characterId)).data.ownerUid == request.auth.uid;
-      allow delete: if hasMidClearance();
-      allow update: if false;
+        && get(/databases/$(database)/documents/characters/$(request.resource.data.characterId)).data.ownerUid == request.auth.uid
+      );
+      allow update: if hasMidClearance()
+        && id == 'probe-' + request.auth.uid
+        && probeFields()
+        && resource.data.createdAt < request.time - duration.value(20, 's');
+      allow delete: if hasMidClearance()
+        && (
+          !id.matches('^probe-.+')
+          || resource.data.createdAt < request.time - duration.value(20, 's')
+        );
     }
 
     match /settings/{id} {
-      allow read: if true;
-      allow create, update: if isAdmin()
+      allow read: if signedIn();
+      allow create: if isAdmin()
         && id == 'controls'
-        && request.resource.data.keys().hasOnly(['rosterSnapshot', 'editQuota'])
+        && request.resource.data.keys().hasOnly(['rosterSnapshot', 'editQuota', 'updatedAt'])
         && request.resource.data.rosterSnapshot is bool
-        && request.resource.data.editQuota is bool;
+        && request.resource.data.editQuota is bool
+        && request.resource.data.updatedAt == request.time;
+      allow update: if isAdmin()
+        && id == 'controls'
+        && request.resource.data.keys().hasOnly(['rosterSnapshot', 'editQuota', 'updatedAt'])
+        && request.resource.data.rosterSnapshot is bool
+        && request.resource.data.editQuota is bool
+        && request.resource.data.updatedAt == request.time
+        && resource.data.get('updatedAt', timestamp.date(2000, 1, 1)) < request.time - duration.value(2, 's');
       allow delete: if false;
     }
 
     match /snapshots/{id} {
-      allow read: if true;
-      allow create, update: if signedIn() && (
+      allow read: if signedIn();
+      allow create: if signedIn() && (
         (id == 'rosterLock'
           && request.resource.data.keys().hasOnly(['until'])
           && request.resource.data.until is timestamp
@@ -172,15 +278,25 @@ service cloud.firestore {
           && request.resource.data.cards is list
           && request.resource.data.cards.size() <= 200)
       );
+      allow update: if signedIn() && (
+        (id == 'rosterLock'
+          && resource.data.until <= request.time
+          && request.resource.data.keys().hasOnly(['until'])
+          && request.resource.data.until is timestamp
+          && request.resource.data.until > request.time
+          && request.resource.data.until < request.time + duration.value(2, 'm'))
+        || (id == 'roster'
+          && (!resource.data.keys().hasAny(['updatedAt']) || resource.data.updatedAt < request.time - duration.value(8, 'm'))
+          && request.resource.data.keys().hasOnly(['cards', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.cards is list
+          && request.resource.data.cards.size() <= 200)
+      );
       allow delete: if false;
     }
 
     match /posts/{postId} {
-      allow read: if true;
-      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
-      allow delete: if signedIn() && resource.data.uid == request.auth.uid;
-      allow update: if signedIn() && resource.data.uid == request.auth.uid
-        && request.resource.data.uid == resource.data.uid;
+      allow read, write: if false;
     }
   }
 }

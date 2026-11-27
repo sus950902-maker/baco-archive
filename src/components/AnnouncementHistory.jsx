@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react"
-import { addDoc, collection, deleteDoc, doc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, startAfter } from "firebase/firestore"
+import { collection, deleteDoc, doc, getDocs, limit, onSnapshot, orderBy, query, serverTimestamp, setDoc, startAfter } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
-import { db } from "../firebase"
+import { auth, db } from "../firebase"
 import AnnouncementLine from "./AnnouncementLine"
 import { AnnouncementTicker } from "./Intranet"
 
@@ -62,16 +62,16 @@ export default function AnnouncementHistory({ staff, onNotice }) {
 
   async function publishTest() {
     try {
-      const created = await addDoc(collection(db, "announcements"), {
+      const user = auth.currentUser
+      if (!user) throw new Error("請先登入")
+      await setDoc(doc(db, "announcements", `probe-${user.uid}`), {
         text: "測試123456789",
         ephemeral: true,
         createdAt: serverTimestamp(),
       })
-      window.setTimeout(() => {
-        deleteDoc(created).catch(() => {})
-      }, 4000)
     } catch (error) {
-      onNotice?.({ code: "ANNOUNCE // DENIED", message: error.message || "測試公告發布失敗" })
+      const limited = error.code === "permission-denied"
+      onNotice?.({ code: "ANNOUNCE // DENIED", message: limited ? "測試公告需間隔 20 秒" : error.message || "測試公告發布失敗" })
     }
   }
 
