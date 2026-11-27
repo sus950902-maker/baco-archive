@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { Lock, Megaphone, Search } from "lucide-react"
+import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
+import { characterTitle, factionLabel } from "../characters"
 import { matchClearance } from "../clearance"
 
 function formatStamp(date) {
@@ -20,6 +22,116 @@ const DOMAIN_LINKS = [
   { href: "#staff", page: "staff", label: "檔案庫" },
   { href: "#staff-admin", page: "staff-admin", label: "人員管理", staffOnly: true },
 ]
+
+const ACTIVE_KEY = "baco-active-character"
+
+function readActiveId(uid) {
+  if (!uid) return ""
+  try {
+    return localStorage.getItem(`${ACTIVE_KEY}:${uid}`) || ""
+  } catch {
+    return ""
+  }
+}
+
+function CharacterSwitch({ user, covered }) {
+  const cached = peekBoundRoster()
+  const [records, setRecords] = useState(cached.records)
+  const [open, setOpen] = useState(false)
+  const [activeId, setActiveId] = useState(() => readActiveId(user?.uid))
+  const rootRef = useRef(null)
+  const owned = records
+    .filter((record) => user && record.ownerUid === user.uid)
+    .sort((left, right) => characterTitle(left).localeCompare(characterTitle(right), "zh-Hant"))
+  const active = owned.find((record) => record.id === activeId) || owned[0] || null
+
+  useEffect(() => subscribeBoundRoster((snapshot) => setRecords(snapshot.records)), [])
+
+  useEffect(() => {
+    if (covered) setOpen(false)
+  }, [covered])
+
+  useEffect(() => {
+    if (!user) return
+    const next = owned.find((record) => record.id === activeId)?.id || owned[0]?.id || ""
+    if (next !== activeId) setActiveId(next)
+  }, [user, owned, activeId])
+
+  useEffect(() => {
+    if (!user || !activeId) return
+    try {
+      localStorage.setItem(`${ACTIVE_KEY}:${user.uid}`, activeId)
+    } catch {
+      // 瀏覽器不允許儲存時，這次停留期間仍使用目前選擇。
+    }
+  }, [user, activeId])
+
+  useEffect(() => {
+    if (!open) return undefined
+    const close = (event) => {
+      if (!rootRef.current?.contains(event.target)) setOpen(false)
+    }
+    const onKey = (event) => {
+      if (event.key === "Escape") setOpen(false)
+    }
+    document.addEventListener("pointerdown", close)
+    document.addEventListener("keydown", onKey)
+    return () => {
+      document.removeEventListener("pointerdown", close)
+      document.removeEventListener("keydown", onKey)
+    }
+  }, [open])
+
+  if (!active) return null
+
+  return (
+    <div ref={rootRef} className="relative shrink-0">
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-label={`切換角色，目前為${characterTitle(active)}`}
+        onClick={() => setOpen((current) => !current)}
+        className="block aspect-[7/9] h-16 overflow-hidden border border-white/25 bg-black sm:h-20"
+      >
+        {active.avatarUrl ? (
+          <img src={active.avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+        ) : (
+          <span className="flex h-full w-full items-center justify-center font-mono text-[10px] text-white">{characterTitle(active).slice(0, 1)}</span>
+        )}
+      </button>
+      {open && (
+        <ul role="listbox" aria-label="選擇角色" className="absolute top-0 left-full z-50 ml-2 min-w-52 border border-white/15 bg-black py-1 shadow-lg">
+          {owned.map((record) => {
+            const selected = record.id === active.id
+            return (
+              <li key={record.id} role="option" aria-selected={selected}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveId(record.id)
+                    setOpen(false)
+                  }}
+                  className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-left hover:bg-white/10 ${selected ? "bg-white/10" : ""}`}
+                >
+                  {record.avatarUrl ? (
+                    <img src={record.avatarUrl} alt="" referrerPolicy="no-referrer" className="aspect-[7/9] h-8 shrink-0 object-cover" />
+                  ) : (
+                    <span className="flex aspect-[7/9] h-8 shrink-0 items-center justify-center bg-white/10 font-mono text-[10px] text-white">{characterTitle(record).slice(0, 1)}</span>
+                  )}
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm text-white">{characterTitle(record)}</span>
+                    <span className="mt-0.5 block truncate font-mono text-[10px] tracking-wide text-white/60">{factionLabel(record)}</span>
+                  </span>
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
 
 function IdentityMark({ src, name }) {
   const [failed, setFailed] = useState(false)
@@ -297,6 +409,12 @@ export default function TopBar({
       )}
     </header>
 
+      {page === "intranet" && (
+        <div className="fixed left-4 z-[32] mt-3 sm:left-6" style={{ top: headerHeight }}>
+          <CharacterSwitch user={user} covered={open} />
+        </div>
+      )}
+
       {searchOpen && (
         <form
           id="archive-search"
@@ -342,14 +460,14 @@ export default function TopBar({
         onClick={() => setOpen(false)}
         tabIndex={open ? 0 : -1}
         aria-hidden={!open}
-        className={`fixed inset-x-0 bottom-0 z-30 bg-black/50 transition-opacity ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
+        className={`fixed inset-x-0 bottom-0 z-[33] bg-black/50 transition-opacity ${open ? "opacity-100" : "pointer-events-none opacity-0"}`}
         style={{ top: headerHeight }}
       />
       <nav
         id="archive-menu"
         aria-label="檔案區段"
         aria-hidden={!open}
-        className={`fixed bottom-0 left-0 z-30 w-[min(100%,18rem)] border-r border-white/10 bg-black transition-transform duration-300 ${open ? "translate-x-0 shadow-[12px_0_32px_rgba(0,0,0,0.35)]" : "pointer-events-none -translate-x-full shadow-none"}`}
+        className={`fixed bottom-0 left-0 z-[33] w-[min(100%,18rem)] border-r border-white/10 bg-black transition-transform duration-300 ${open ? "translate-x-0 shadow-[12px_0_32px_rgba(0,0,0,0.35)]" : "pointer-events-none -translate-x-full shadow-none"}`}
         style={{ top: headerHeight }}
       >
         {(domainFirst ? ["domain", "files"] : ["files", "domain"])
