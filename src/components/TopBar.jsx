@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react"
-import { Lock, Megaphone, Search } from "lucide-react"
+import { Lock, Megaphone, Search, ShoppingCart } from "lucide-react"
 import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
 import { characterTitle, factionLabel } from "../characters"
 import { matchClearance } from "../clearance"
@@ -21,6 +21,7 @@ const DOMAIN_LINKS = [
   { href: "#intranet", page: "intranet", label: "內部網域" },
   { href: "#staff", page: "staff", label: "檔案庫" },
   { href: "#staff-admin", page: "staff-admin", label: "人員管理", staffOnly: true },
+  { href: "#review", page: "review", label: "審核區", staffOnly: true },
 ]
 
 const ACTIVE_KEY = "baco-active-character"
@@ -40,6 +41,9 @@ function CharacterSwitch({ user, covered }) {
   const [open, setOpen] = useState(false)
   const [activeId, setActiveId] = useState(() => readActiveId(user?.uid))
   const rootRef = useRef(null)
+  const waveRef = useRef(null)
+  const sourceRef = useRef(null)
+  const [waveReady, setWaveReady] = useState(0)
   const owned = records
     .filter((record) => user && record.ownerUid === user.uid)
     .sort((left, right) => characterTitle(left).localeCompare(characterTitle(right), "zh-Hant"))
@@ -67,6 +71,46 @@ function CharacterSwitch({ user, covered }) {
   }, [user, activeId])
 
   useEffect(() => {
+    const canvas = waveRef.current
+    const img = sourceRef.current
+    if (!canvas || !img) return undefined
+    let frame = 0
+    const start = performance.now()
+    const tick = (now) => {
+      frame = requestAnimationFrame(tick)
+      if (!img.complete || !img.naturalWidth) return
+      const w = canvas.clientWidth
+      const h = canvas.clientHeight
+      if (!w || !h) return
+      const dpr = window.devicePixelRatio || 1
+      const bw = Math.round(w * dpr)
+      const bh = Math.round(h * dpr)
+      if (canvas.width !== bw || canvas.height !== bh) {
+        canvas.width = bw
+        canvas.height = bh
+      }
+      const ctx = canvas.getContext("2d")
+      if (!ctx) return
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      ctx.fillStyle = "#fff"
+      ctx.fillRect(0, 0, w, h)
+      const scale = Math.max(w / img.naturalWidth, h / img.naturalHeight)
+      const sw = w / scale
+      const sh = h / scale
+      const sx = (img.naturalWidth - sw) / 2
+      const sy = (img.naturalHeight - sh) / 2
+      const scroll = ((now - start) / 1000) * 8
+      const rowSh = Math.max(sh / h, 0.01)
+      for (let y = 0; y < h; y += 1) {
+        const shift = Math.sin(((y - scroll) / h) * Math.PI * 8) * 0.42
+        ctx.drawImage(img, sx, sy + (y / h) * sh, sw, rowSh, shift, y, w, 1)
+      }
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [active?.avatarUrl, waveReady])
+
+  useEffect(() => {
     if (!open) return undefined
     const close = (event) => {
       if (!rootRef.current?.contains(event.target)) setOpen(false)
@@ -92,10 +136,20 @@ function CharacterSwitch({ user, covered }) {
         aria-haspopup="listbox"
         aria-label={`切換角色，目前為${characterTitle(active)}`}
         onClick={() => setOpen((current) => !current)}
-        className="block aspect-[7/9] h-16 overflow-hidden border border-white/25 bg-black sm:h-20"
+        className="id-photo block aspect-[7/9] h-16 border border-white/25 hover:border-white sm:h-20"
       >
         {active.avatarUrl ? (
-          <img src={active.avatarUrl} alt="" referrerPolicy="no-referrer" className="h-full w-full object-cover" />
+          <span className="id-photo-plate">
+            <canvas ref={waveRef} className="h-full w-full" />
+            <img
+              ref={sourceRef}
+              src={active.avatarUrl}
+              alt=""
+              referrerPolicy="no-referrer"
+              className="pointer-events-none absolute h-0 w-0 opacity-0"
+              onLoad={() => setWaveReady((count) => count + 1)}
+            />
+          </span>
         ) : (
           <span className="flex h-full w-full items-center justify-center font-mono text-[10px] text-white">{characterTitle(active).slice(0, 1)}</span>
         )}
@@ -115,7 +169,7 @@ function CharacterSwitch({ user, covered }) {
                   className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-left hover:bg-white/10 ${selected ? "bg-white/10" : ""}`}
                 >
                   {record.avatarUrl ? (
-                    <img src={record.avatarUrl} alt="" referrerPolicy="no-referrer" className="aspect-[7/9] h-8 shrink-0 object-cover" />
+                    <img src={record.avatarUrl} alt="" referrerPolicy="no-referrer" className="aspect-[7/9] h-8 shrink-0 bg-white object-cover" />
                   ) : (
                     <span className="flex aspect-[7/9] h-8 shrink-0 items-center justify-center bg-white/10 font-mono text-[10px] text-white">{characterTitle(record).slice(0, 1)}</span>
                   )}
@@ -195,7 +249,7 @@ export default function TopBar({
   const [searchValue, setSearchValue] = useState("")
   const [results, setResults] = useState([])
   const [searching, setSearching] = useState(false)
-  const [confirmAdmin, setConfirmAdmin] = useState(false)
+  const [confirmEntry, setConfirmEntry] = useState("")
   const granting = useRef(false)
 
   useEffect(() => {
@@ -230,19 +284,19 @@ export default function TopBar({
   }, [])
 
   useEffect(() => {
-    if (!open) setConfirmAdmin(false)
+    if (!open) setConfirmEntry("")
   }, [open])
 
   useEffect(() => {
-    if (!confirmAdmin) return undefined
+    if (!confirmEntry) return undefined
     const onPointerDown = (event) => {
       const node = event.target instanceof Element ? event.target : event.target.parentElement
-      if (node?.closest("[data-staff-admin]")) return
-      setConfirmAdmin(false)
+      if (node?.closest("[data-entry-guard]")) return
+      setConfirmEntry("")
     }
     document.addEventListener("pointerdown", onPointerDown)
     return () => document.removeEventListener("pointerdown", onPointerDown)
-  }, [confirmAdmin])
+  }, [confirmEntry])
 
   useEffect(() => {
     if (!open && !searchOpen) return undefined
@@ -396,21 +450,30 @@ export default function TopBar({
         )}
       </div>
       {page === "intranet" && (
-        <button
-          type="button"
-          onClick={() => {
-            window.location.hash = "#announcements"
-          }}
-          className="absolute top-full right-4 z-10 mt-3 flex flex-col items-center gap-1 border border-white/20 bg-black px-2.5 py-2 text-white hover:border-white sm:right-6"
-        >
-          <Megaphone className="h-5 w-5" aria-hidden="true" />
-          <span className="font-mono text-[10px] leading-none tracking-[0.14em]">公告</span>
-        </button>
+        <div className="absolute top-full right-4 z-10 mt-3 flex items-start gap-2 sm:right-6">
+          <button
+            type="button"
+            className="flex flex-col items-center gap-1 border border-white/20 bg-black px-2.5 py-2 text-white hover:border-white"
+          >
+            <ShoppingCart className="h-5 w-5" aria-hidden="true" />
+            <span className="font-mono text-[10px] leading-none tracking-[0.14em]">稅換庫</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = "#announcements"
+            }}
+            className="flex flex-col items-center gap-1 border border-white/20 bg-black px-2.5 py-2 text-white hover:border-white"
+          >
+            <Megaphone className="h-5 w-5" aria-hidden="true" />
+            <span className="font-mono text-[10px] leading-none tracking-[0.14em]">公告</span>
+          </button>
+        </div>
       )}
     </header>
 
       {page === "intranet" && (
-        <div className="fixed left-4 z-[32] mt-3 sm:left-6" style={{ top: headerHeight }}>
+        <div className="fixed left-4 z-[15] mt-3 sm:left-6" style={{ top: headerHeight }}>
           <CharacterSwitch user={user} covered={open} />
         </div>
       )}
@@ -499,26 +562,26 @@ export default function TopBar({
                 INTERNAL DOMAIN
               </p>
               {DOMAIN_LINKS.filter((link) => (!link.staffOnly || staff) && (link.page !== "intranet" || domainAccess)).map((link) => {
-                const guarded = link.page === "staff-admin"
-                const armed = guarded && confirmAdmin
+                const guarded = link.page === "staff-admin" || link.page === "review"
+                const armed = guarded && confirmEntry === link.page
                 return (
                 <a
                   key={link.href}
                   href={link.href}
                   tabIndex={open ? 0 : -1}
-                  data-staff-admin={guarded ? "" : undefined}
+                  data-entry-guard={guarded ? "" : undefined}
                   onClick={(event) => {
                     if (!guarded) {
-                      setConfirmAdmin(false)
+                      setConfirmEntry("")
                       setOpen(false)
                       return
                     }
-                    if (!confirmAdmin) {
+                    if (confirmEntry !== link.page) {
                       event.preventDefault()
-                      setConfirmAdmin(true)
+                      setConfirmEntry(link.page)
                       return
                     }
-                    setConfirmAdmin(false)
+                    setConfirmEntry("")
                     setOpen(false)
                   }}
                   className={`flex items-center justify-between gap-3 border-b border-white/10 px-5 py-4 font-mono text-sm tracking-wide transition-colors ${armed ? "bg-signal text-black" : `hover:bg-white/5 hover:text-ink ${page === link.page ? "text-ink" : "text-ash"}`}`}

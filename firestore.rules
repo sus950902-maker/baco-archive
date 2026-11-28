@@ -167,8 +167,6 @@ service cloud.firestore {
     match /characters/{charId} {
       allow read: if signedIn();
       allow create: if hasMidClearance()
-        && charId == actor().pendingCharacterId
-        && actor().reservedAt > request.time - duration.value(45, 's')
         && request.resource.data.status == 'unassigned'
         && request.resource.data.ownerUid == null
         && request.resource.data.uid is string
@@ -202,9 +200,6 @@ service cloud.firestore {
       allow get: if signedIn();
       allow list: if false;
       allow create: if hasMidClearance()
-        && code == actor().pendingBind
-        && request.resource.data.characterId == actor().pendingCharacterId
-        && actor().reservedAt > request.time - duration.value(45, 's')
         && request.resource.data.characterId is string
         && request.resource.data.faction in ['調查員', '異常', '民眾', '議會'];
       allow delete: if hasMidClearance();
@@ -277,6 +272,10 @@ service cloud.firestore {
           && request.resource.data.updatedAt == request.time
           && request.resource.data.cards is list
           && request.resource.data.cards.size() <= 200)
+        || (id == 'rosterDirty'
+          && request.resource.data.keys().hasOnly(['pending', 'at'])
+          && request.resource.data.pending is bool
+          && request.resource.data.at == request.time)
       );
       allow update: if signedIn() && (
         (id == 'rosterLock'
@@ -286,11 +285,15 @@ service cloud.firestore {
           && request.resource.data.until > request.time
           && request.resource.data.until < request.time + duration.value(2, 'm'))
         || (id == 'roster'
-          && (!resource.data.keys().hasAny(['updatedAt']) || resource.data.updatedAt < request.time - duration.value(8, 'm'))
+          && (!resource.data.keys().hasAny(['updatedAt']) || resource.data.updatedAt < request.time - duration.value(10, 'm'))
           && request.resource.data.keys().hasOnly(['cards', 'updatedAt'])
           && request.resource.data.updatedAt == request.time
           && request.resource.data.cards is list
           && request.resource.data.cards.size() <= 200)
+        || (id == 'rosterDirty'
+          && request.resource.data.keys().hasOnly(['pending', 'at'])
+          && request.resource.data.pending is bool
+          && request.resource.data.at == request.time)
       );
       allow delete: if false;
     }

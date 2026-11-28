@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import { collection, doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
+import { markRosterDirty } from "../boundRoster"
 import { assignFileNumbers, FACTION_COLOR, FACTIONS, issueBindCode, publicCharacter, removeCharacter } from "../characters"
 import { db } from "../firebase"
 import { deleteStoredImage, publicIdFromUrl } from "../media"
@@ -153,6 +154,7 @@ export default function RosterAdmin({ staff, role, ready, onNotice }) {
       await deleteStoredImage(record.portraitPublicId || publicIdFromUrl(record.portraitUrl))
       await deleteStoredImage(record.idCardPublicId || publicIdFromUrl(record.idCardUrl))
       await removeCharacter(record)
+      if (record.status === "bound") markRosterDirty()
       setPendingDelete("")
       onNotice({ code: "ROSTER // DELETED", message: `${record.bindCode} 與角色檔案已刪除。頭像已從圖片庫移除。` })
     } catch (deleteError) {

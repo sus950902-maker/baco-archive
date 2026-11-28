@@ -10,6 +10,7 @@ import Hero from "./components/Hero"
 import AnnouncementHistory from "./components/AnnouncementHistory"
 import Intranet from "./components/Intranet"
 import PersonnelRoster from "./components/PersonnelRoster"
+import ReviewDesk from "./components/ReviewDesk"
 import RosterAdmin from "./components/RosterAdmin"
 import IdentityCard from "./components/IdentityCard"
 import NoticeStack from "./components/NoticeStack"
@@ -29,10 +30,11 @@ const PAGES = {
   "#announcements": "announcements",
   "#staff": "staff",
   "#staff-admin": "staff-admin",
+  "#review": "review",
   "#card": "card",
 }
 
-const INTERNAL_PAGES = new Set(["intranet", "announcements", "staff", "staff-admin", "card"])
+const INTERNAL_PAGES = new Set(["intranet", "announcements", "staff", "staff-admin", "review", "card"])
 
 function clearanceLabel(role) {
   if (role === "admin") return "COUNCIL"
@@ -314,8 +316,8 @@ export default function App() {
     <div className="relative flex min-h-screen flex-col">
       <div className="scanlines" />
       <div className="scanbar" />
-      {(view === "intranet" || view === "announcements") && <div className="vignette" />}
-      {(view === "archive" || view === "staff") && <div className="vignette vignette-paper" />}
+      {view === "announcements" && <div className="vignette" />}
+      {(view === "archive" || view === "staff" || view === "intranet") && <div className="vignette vignette-paper" />}
 
       {!booted && <BootSequenceModal mode="boot" onDone={finishBoot} />}
       {authSequence && (
@@ -361,6 +363,8 @@ export default function App() {
             />
           ) : view === "staff-admin" ? (
             <RosterAdmin staff={staff} role={role} ready={authReady} onNotice={pushNotice} />
+          ) : view === "review" ? (
+            <ReviewDesk staff={staff} ready={authReady} />
           ) : view === "card" && editingCharacter ? (
             <CharacterEditor
               key={editingCharacter.id}

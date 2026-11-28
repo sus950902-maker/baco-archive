@@ -11,7 +11,7 @@ import {
   where,
   writeBatch,
 } from "firebase/firestore"
-import { reserveCharacterWrite, writeOwnUser } from "./accountWrite"
+import { writeOwnUser } from "./accountWrite"
 import { db } from "./firebase"
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
@@ -90,6 +90,7 @@ export async function assignFileNumbers(faction) {
     else pending.push(entry)
   })
   if (!pending.length) return
+  const touchesBound = pending.some((entry) => entry.data().status === "bound")
   pending.sort((a, b) => {
     const left = a.data().createdAt?.toMillis?.() || 0
     const right = b.data().createdAt?.toMillis?.() || 0
@@ -102,6 +103,9 @@ export async function assignFileNumbers(faction) {
     batch.update(entry.ref, { fileNo: padFileNo(max) })
   })
   await batch.commit()
+  if (!touchesBound) return
+  const { markRosterDirty } = await import("./boundRoster")
+  await markRosterDirty()
 }
 
 async function reserveFileNo(faction) {
@@ -141,7 +145,6 @@ export async function createCharacter(input) {
   const bindCode = await uniqueBindCode()
   const fileNo = input.fileNo || (await reserveFileNo(input.faction))
   const characterRef = doc(collection(db, "characters"))
-  await reserveCharacterWrite(characterRef.id, bindCode)
   const batch = writeBatch(db)
   batch.set(characterRef, {
     uid: serial,
@@ -316,5 +319,26 @@ export function publicCharacter(id, data) {
     idCardPublicId: data.idCardPublicId || "",
     bio: data.bio || "",
     createdAt: data.createdAt?.toMillis?.() || 0,
+    updatedAt: data.updatedAt?.toMillis?.() || 0,
+  }
+}
+
+export function rosterCard(id, data) {
+  const time = (value) => (typeof value === "number" ? value : value?.toMillis?.() || 0)
+  return {
+    id,
+    uid: data.uid || "",
+    fileNo: data.fileNo || "",
+    name: data.name || "未命名",
+    faction: data.faction || "",
+    department: data.department || "",
+    ownerUid: data.ownerUid || null,
+    avatarUrl: data.avatarUrl || "",
+    portraitUrl: data.portraitUrl || "",
+    portraitX: Number.isFinite(data.portraitX) ? data.portraitX : null,
+    portraitY: Number.isFinite(data.portraitY) ? data.portraitY : null,
+    portraitScale: Number.isFinite(data.portraitScale) && data.portraitScale >= 1 ? data.portraitScale : 1,
+    createdAt: time(data.createdAt),
+    updatedAt: time(data.updatedAt),
   }
 }

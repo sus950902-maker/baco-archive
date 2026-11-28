@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 import { doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore"
 import { reserveCharacterWrite } from "../accountWrite"
+import { markRosterDirty } from "../boundRoster"
 import { assignFileNumbers, DEPARTMENTS, FACTION_COLOR, factionHasDepartment, factionLabel, publishCharacterAnnouncement } from "../characters"
 import { db } from "../firebase"
 import { subscribeSiteControls, taipeiDay } from "../siteControls"
@@ -25,6 +26,13 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
   const [editQuota, setEditQuota] = useState(false)
   const avatarRef = useRef(null)
   const portraitRef = useRef(null)
+  const slim = !("bio" in character)
+  const storedRef = useRef({
+    ready: !slim,
+    avatarPublicId: character.avatarPublicId || "",
+    portraitPublicId: character.portraitPublicId || "",
+  })
+  const bioSeeded = useRef(!slim)
   const quotaOn = editQuota && !staff
   const quotaBlocked = quotaOn && editCount >= 5 && editDay === taipeiDay()
 
@@ -37,6 +45,15 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
       setFileNo(data.fileNo || "")
       setEditCount(data.editCount || 0)
       setEditDay(data.editDay || "")
+      if (!bioSeeded.current) {
+        bioSeeded.current = true
+        setBio((current) => current || data.bio || "")
+      }
+      storedRef.current = {
+        ready: true,
+        avatarPublicId: data.avatarPublicId || storedRef.current.avatarPublicId,
+        portraitPublicId: data.portraitPublicId || storedRef.current.portraitPublicId,
+      }
     })
   }, [character.id, faction])
 
@@ -49,6 +66,10 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
     }
     if (quotaBlocked) {
       setError("今日的修改次數已用完")
+      return
+    }
+    if (!storedRef.current.ready) {
+      setError("檔案讀取中")
       return
     }
     setBusy(true)
@@ -80,6 +101,8 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
         patch.portraitUrl = ""
         patch.portraitPublicId = ""
       }
+      const previousAvatarId = storedRef.current.avatarPublicId
+      const previousPortraitId = storedRef.current.portraitPublicId
       setStatus("檔案寫入中")
       await reserveCharacterWrite(character.id)
       const firstSave = !character.name || character.name === "未命名"
@@ -91,6 +114,7 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
         }
       }
       await updateDoc(doc(db, "characters", character.id), patch)
+      markRosterDirty()
       if (firstSave) {
         try {
           await publishCharacterAnnouncement({ id: character.id, name: nextName, fileNo, faction })
@@ -98,17 +122,17 @@ export default function CharacterEditor({ character, staff = false, onNotice, on
           // 檔案已儲存。公告寫入失敗時不撤回這次儲存。
         }
       }
-      if (avatarFile) deleteStoredImage(character.avatarPublicId || publicIdFromUrl(character.avatarUrl))
+      if (avatarFile) deleteStoredImage(previousAvatarId || publicIdFromUrl(character.avatarUrl))
       if (character.portraitUrl && portraitUrl !== character.portraitUrl) {
-        deleteStoredImage(character.portraitPublicId || publicIdFromUrl(character.portraitUrl))
+        deleteStoredImage(previousPortraitId || publicIdFromUrl(character.portraitUrl))
       }
       onSaved({
         ...character,
         ...patch,
         avatarUrl: patch.avatarUrl || character.avatarUrl,
-        avatarPublicId: patch.avatarPublicId || character.avatarPublicId,
+        avatarPublicId: patch.avatarPublicId || previousAvatarId,
         portraitUrl: patch.portraitUrl ?? character.portraitUrl,
-        portraitPublicId: patch.portraitPublicId ?? character.portraitPublicId,
+        portraitPublicId: patch.portraitPublicId ?? previousPortraitId,
         portraitX: patch.portraitX ?? character.portraitX,
         portraitY: patch.portraitY ?? character.portraitY,
         portraitScale: patch.portraitScale ?? character.portraitScale,

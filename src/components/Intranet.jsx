@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { collection, limit, onSnapshot, orderBy, query } from "firebase/firestore"
+import { collection, limit, onSnapshot, orderBy, query, Timestamp, where } from "firebase/firestore"
 import { readAnnouncement } from "../characters"
 import { db } from "../firebase"
 import AnnouncementLine from "./AnnouncementLine"
@@ -20,8 +20,14 @@ export function AnnouncementTicker() {
   const known = useRef(new Set())
 
   useEffect(() => {
-    const latest = query(collection(db, "announcements"), orderBy("createdAt", "desc"), limit(1))
-    return onSnapshot(latest, (snap) => {
+    const since = Timestamp.fromMillis(Date.now())
+    const live = query(
+      collection(db, "announcements"),
+      where("createdAt", ">", since),
+      orderBy("createdAt", "desc"),
+      limit(1),
+    )
+    return onSnapshot(live, (snap) => {
       const next = snap.docs
         .map((entry) => readAnnouncement(entry.id, entry.data()))
         .sort((left, right) => right.createdAt - left.createdAt || right.id.localeCompare(left.id))
