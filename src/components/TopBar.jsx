@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { Lock, Megaphone, Search, ShoppingCart } from "lucide-react"
 import { peekBoundRoster, subscribeBoundRoster } from "../boundRoster"
-import { characterTitle, factionLabel } from "../characters"
+import { characterTitle, FACTION_COLOR, factionLabel } from "../characters"
 import { matchClearance } from "../clearance"
 
 function formatStamp(date) {
@@ -25,6 +26,55 @@ const DOMAIN_LINKS = [
 ]
 
 const ACTIVE_KEY = "baco-active-character"
+const SWITCH_MS = 2000
+
+function SwitchNote({ note, onDone }) {
+  const barRef = useRef(null)
+  const doneRef = useRef(onDone)
+  const [open, setOpen] = useState(false)
+  const [leaving, setLeaving] = useState(false)
+  const color = FACTION_COLOR[note.faction] || "#fff"
+  doneRef.current = onDone
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setOpen(true))
+    const hold = window.setTimeout(() => setLeaving(true), SWITCH_MS)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.clearTimeout(hold)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!leaving) return undefined
+    const bar = barRef.current
+    if (!bar) return undefined
+    const width = bar.offsetWidth
+    bar.style.transition = "none"
+    bar.style.width = `${width}px`
+    bar.getBoundingClientRect()
+    bar.style.transition = "width 0.4s ease, padding 0.4s ease, border-width 0.4s ease"
+    bar.style.width = "0px"
+    bar.style.paddingLeft = "0px"
+    bar.style.paddingRight = "0px"
+    bar.style.borderWidth = "0px"
+    const done = window.setTimeout(() => doneRef.current(), 420)
+    return () => window.clearTimeout(done)
+  }, [leaving])
+
+  return createPortal(
+    <div className={`announcement-reveal ${open ? "is-open" : ""}`} style={{ top: "calc(var(--header-h, 6.5rem) + 1.25rem)" }}>
+      <div className="announcement-reveal-clip">
+        <div ref={barRef} className="announcement-bar" role="status">
+          <span className="text-xs leading-5 whitespace-nowrap">
+            檔案已切換為 <span style={{ color }}>{note.name}</span>
+          </span>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  )
+}
 
 function readActiveId(uid) {
   if (!uid) return ""
@@ -40,6 +90,7 @@ function CharacterSwitch({ user, covered }) {
   const [records, setRecords] = useState(cached.records)
   const [open, setOpen] = useState(false)
   const [activeId, setActiveId] = useState(() => readActiveId(user?.uid))
+  const [switchNote, setSwitchNote] = useState(null)
   const rootRef = useRef(null)
   const waveRef = useRef(null)
   const sourceRef = useRef(null)
@@ -163,8 +214,10 @@ function CharacterSwitch({ user, covered }) {
                 <button
                   type="button"
                   onClick={() => {
-                    setActiveId(record.id)
                     setOpen(false)
+                    if (record.id === active?.id) return
+                    setActiveId(record.id)
+                    setSwitchNote({ id: record.id, name: characterTitle(record), faction: record.faction, at: Date.now() })
                   }}
                   className={`flex w-full items-center gap-2 px-2.5 py-1.5 text-left hover:bg-white/10 ${selected ? "bg-white/10" : ""}`}
                 >
@@ -182,6 +235,9 @@ function CharacterSwitch({ user, covered }) {
             )
           })}
         </ul>
+      )}
+      {switchNote && (
+        <SwitchNote key={`${switchNote.id}:${switchNote.at}`} note={switchNote} onDone={() => setSwitchNote(null)} />
       )}
     </div>
   )
